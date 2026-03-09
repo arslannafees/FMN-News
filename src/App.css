@@ -1,0 +1,190 @@
+/* App-specific styles */
+
+/* Smooth scroll for horizontal carousels */
+.scroll-smooth {
+  scroll-behavior: smooth;
+}
+
+/* Prevent text selection on interactive elements */
+button,
+a {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Responsive container adjustments */
+@media (max-width: 640px) {
+  .max-w-7xl {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}
+
+/* Hero section responsive fixes */
+@media (max-width: 1024px) {
+  .hero-featured {
+    margin-bottom: 1rem;
+  }
+}
+
+/* Card hover effects - disabled on touch devices */
+@media (hover: none) {
+  .card-hover:hover {
+    transform: none;
+  }
+  
+  .img-zoom:hover img {
+    transform: none;
+  }
+}
+
+/* Mobile menu improvements */
+@media (max-width: 1024px) {
+  nav.lg\:hidden {
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+  }
+}
+
+/* Breaking news ticker mobile optimization */
+@media (max-width: 640px) {
+  .ticker-animation {
+    animation-duration: 20s;
+  }
+}
+
+/* Table responsive */
+@media (max-width: 768px) {
+  table {
+    font-size: 0.75rem;
+  }
+  
+  th,
+  td {
+    padding: 0.5rem 0.375rem;
+  }
+}
+
+/* Form improvements on mobile */
+@media (max-width: 640px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
+/* Admin dashboard stats cards */
+@media (max-width: 640px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Image selection grid */
+@media (max-width: 480px) {
+  .image-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Video thumbnails */
+@media (max-width: 640px) {
+  .video-thumbnail {
+    height: 120px;
+  }
+}
+
+/* Category cards */
+@media (max-width: 640px) {
+  .category-card {
+    height: 160px;
+  }
+}
+
+/* Newsletter section */
+@media (max-width: 640px) {
+  .newsletter-bg {
+    padding: 1.5rem;
+  }
+}
+
+/* Footer improvements */
+@media (max-width: 640px) {
+  footer .grid {
+    gap: 1.5rem;
+  }
+}
+
+/* Back to top button */
+.back-to-top {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 50;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.back-to-top.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Loading states */
+.loading {
+  position: relative;
+  pointer-events: none;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Toast notifications */
+.toast {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  padding: 1rem 1.5rem;
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  animation: slide-in-right 0.3s ease;
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Print styles */
+@media print {
+  header,
+  footer,
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    font-size: 12pt;
+  }
+  
+  .prose {
+    max-width: none;
+  }
+}

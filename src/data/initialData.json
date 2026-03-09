@@ -1,0 +1,307 @@
+{
+    "articles": [
+        {
+            "id": "1",
+            "title": "Pakistan Urges Collective Action to Counter Terrorism in the Sahel and West Africa",
+            "excerpt": "The Permanent Mission of Pakistan to the United Nations calls for unified international efforts to address growing security challenges in the region.",
+            "content": "The Permanent Mission of Pakistan to the United Nations has called for collective action to counter terrorism in the Sahel and West Africa region. In a statement delivered at the UN Security Council, Pakistani representatives emphasized the need for coordinated international efforts to address the growing security challenges.\n\nThe Sahel region has witnessed a significant increase in terrorist activities over the past decade, with various extremist groups taking advantage of political instability and porous borders. Pakistan, drawing from its own experience in combating terrorism, offered to share expertise and best practices with affected nations.\n\nThe international community has been urged to increase support for regional counter-terrorism initiatives and to address the root causes of extremism through development and education programs.",
+            "category": "World",
+            "author": "Diplomatic Correspondent",
+            "image": "/hero-featured.jpg",
+            "time": "2 hours ago",
+            "readTime": "8 min read",
+            "featured": true,
+            "isBreaking": true
+        },
+        {
+            "id": "3",
+            "title": "Championship Finals: Underdog Team Stuns Defending Champions",
+            "excerpt": "In a thrilling match, the underdog team secured a historic victory.",
+            "content": "In one of the most memorable championship finals in recent history, the underdog team has stunned the defending champions with a remarkable performance.\n\nThe match, watched by millions of fans worldwide, saw the underdogs overcome a significant deficit to secure victory in the final minutes. The winning team's captain described the win as \"a dream come true\" and credited their success to teamwork and perseverance.\n\nThis victory marks a significant milestone for the team, which had never before reached the championship final. Sports analysts are already calling this one of the greatest upsets in the sport's history.",
+            "category": "Sports",
+            "author": "Sports Correspondent",
+            "image": "/side-story-sports.jpg",
+            "time": "3 hours ago",
+            "readTime": "6 min read"
+        },
+        {
+            "id": "4",
+            "title": "New Economic Policies Promise Job Growth",
+            "excerpt": "Government announces comprehensive economic reforms aimed at boosting employment.",
+            "content": "The government has unveiled a comprehensive set of economic policies designed to stimulate job growth and support small businesses.\n\nThe new measures include tax incentives for companies that create new positions, increased funding for vocational training programs, and streamlined regulations for startups. Economists have generally welcomed the announcement, though some caution that the full impact may take time to materialize.\n\nSmall business owners have expressed optimism about the reforms, particularly the proposed reduction in bureaucratic red tape. The policies are expected to come into effect next quarter.",
+            "category": "Business",
+            "author": "Business Editor",
+            "image": "/side-story-business.jpg",
+            "time": "4 hours ago",
+            "readTime": "7 min read"
+        },
+        {
+            "id": "5",
+            "title": "Space Mission Discovers Evidence of Ancient Water on Mars",
+            "excerpt": "NASA rover finds compelling evidence of past water activity on the Red Planet.",
+            "content": "NASA's latest Mars rover has discovered compelling evidence of ancient water activity on the Red Planet, marking a significant milestone in the search for past life.\n\nThe rover, which has been exploring the Martian surface for the past year, identified mineral deposits that could only have formed in the presence of liquid water. Scientists believe these findings suggest that Mars may have been habitable billions of years ago.\n\nThe discovery has reignited interest in future manned missions to Mars and the possibility of finding microbial life. NASA plans to conduct further analysis of the samples in the coming months.",
+            "category": "Science",
+            "author": "Science Correspondent",
+            "image": "/editors-mars.jpg",
+            "time": "5 hours ago",
+            "readTime": "5 min read"
+        },
+        {
+            "id": "6",
+            "title": "Revolutionary Cancer Treatment Shows 90% Success Rate",
+            "excerpt": "New immunotherapy treatment offers hope for cancer patients worldwide.",
+            "content": "Researchers have announced promising results from clinical trials of a revolutionary new cancer treatment, showing a 90% success rate in early-stage patients.\n\nThe new immunotherapy treatment works by harnessing the body's own immune system to target and destroy cancer cells. Unlike traditional treatments such as chemotherapy, this approach has significantly fewer side effects.\n\nMedical experts are cautiously optimistic about the results, noting that larger trials will be needed to confirm the treatment's effectiveness. If approved, the treatment could become available to patients within the next few years.",
+            "category": "Health",
+            "author": "Health Editor",
+            "image": "/editors-medical.jpg",
+            "time": "6 hours ago",
+            "readTime": "8 min read"
+        },
+        {
+            "id": "7",
+            "title": "Hidden Underground City Discovered in Turkey",
+            "excerpt": "Archaeologists uncover ancient underground city dating back thousands of years.",
+            "content": "Archaeologists in Turkey have made a remarkable discovery - a vast underground city that dates back thousands of years.\n\nThe city, which extends several levels beneath the surface, includes living quarters, storage rooms, and what appear to be places of worship. Researchers believe the city could have housed thousands of people and may have been used as a refuge during times of conflict.\n\nThe discovery is being hailed as one of the most significant archaeological finds in recent years and is expected to provide valuable insights into ancient civilizations. Excavations are ongoing, with experts predicting that the full extent of the city has yet to be revealed.",
+            "category": "World",
+            "author": "Archaeology Correspondent",
+            "image": "/editors-archaeology.jpg",
+            "time": "7 hours ago",
+            "readTime": "6 min read"
+        },
+        {
+            "id": "9",
+            "title": "Ancient Manuscript Reveals Lost Civilization",
+            "excerpt": "Historians decode manuscript that sheds light on previously unknown ancient culture.",
+            "content": "A team of historians has successfully decoded an ancient manuscript that reveals the existence of a previously unknown civilization.\n\nThe manuscript, which was discovered in a private collection, contains detailed accounts of a sophisticated society that thrived in a region now covered by dense jungle. The texts describe advanced agricultural practices, complex social structures, and extensive trade networks.\n\nThe discovery is forcing historians to reconsider established timelines of human development. Further research is planned to locate archaeological evidence of the civilization described in the manuscript.",
+            "category": "Science",
+            "author": "History Correspondent",
+            "image": "/editors-manuscript.jpg",
+            "time": "9 hours ago",
+            "readTime": "10 min read"
+        },
+        {
+            "id": "10",
+            "title": "Ocean Cleanup Project Removes 100 Tons of Plastic",
+            "excerpt": "Innovative ocean cleanup system achieves major milestone in fight against pollution.",
+            "content": "An innovative ocean cleanup project has successfully removed 100 tons of plastic waste from the Pacific Ocean, marking a significant milestone in the fight against marine pollution.\n\nThe cleanup system uses advanced technology to collect plastic debris while minimizing harm to marine life. The collected plastic is then recycled into various products, creating a sustainable circular economy.\n\nEnvironmental groups have praised the project's success and are calling for expanded funding for similar initiatives. The organization behind the cleanup plans to deploy additional systems in other polluted ocean areas.",
+            "category": "World",
+            "author": "Environment Reporter",
+            "image": "/editors-ocean.jpg",
+            "time": "10 hours ago",
+            "readTime": "5 min read"
+        },
+        {
+            "id": "11",
+            "title": "International Trade Agreement Signed by 15 Nations",
+            "excerpt": "Landmark deal promises to reshape global commerce and create new opportunities.",
+            "content": "Fifteen nations have signed a landmark international trade agreement that promises to reshape global commerce and create new opportunities for emerging economies.\n\nThe agreement, which was negotiated over several years, eliminates tariffs on thousands of products and establishes common standards for trade. Supporters argue that the deal will boost economic growth and create millions of new jobs.\n\nCritics, however, have raised concerns about the potential impact on local industries and workers. The agreement is expected to come into force early next year, pending ratification by member countries.",
+            "category": "World",
+            "author": "Sarah Mitchell",
+            "image": "/latest-un.jpg",
+            "time": "3 hours ago",
+            "readTime": "7 min read"
+        },
+        {
+            "id": "12",
+            "title": "New Education Reform Bill Introduced",
+            "excerpt": "Comprehensive reforms aim to modernize the education system.",
+            "content": "Lawmakers have introduced a comprehensive education reform bill that aims to modernize the country's education system.\n\nThe proposed reforms include increased funding for public schools, updated curricula to reflect modern workforce needs, and expanded access to vocational training programs. The bill also addresses teacher compensation and working conditions.\n\nEducation advocates have generally welcomed the proposal, though some have called for even more ambitious reforms. The bill is expected to face significant debate in the legislature before a vote.",
+            "category": "Politics",
+            "author": "Education Correspondent",
+            "image": "/latest-politics.jpg",
+            "time": "2 hours ago",
+            "readTime": "6 min read"
+        },
+        {
+            "id": "13",
+            "title": "Wildlife Conservation Success Story",
+            "excerpt": "Endangered tiger population shows remarkable recovery.",
+            "content": "Conservation efforts have led to a remarkable recovery in the population of endangered tigers in protected reserves.\n\nThe latest census shows a 30% increase in the tiger population over the past five years, marking a significant success for conservation programs. The recovery is attributed to improved anti-poaching measures, habitat restoration, and community engagement initiatives.\n\nConservationists caution that continued efforts are needed to ensure the long-term survival of the species, but the current trends are encouraging. The success is being studied as a model for other endangered species conservation programs.",
+            "category": "World",
+            "author": "Wildlife Correspondent",
+            "image": "/latest-wildlife.jpg",
+            "time": "3 hours ago",
+            "readTime": "5 min read"
+        },
+        {
+            "id": "14",
+            "title": "Celebrity Couple Announces Engagement",
+            "excerpt": "Hollywood stars share exciting news with fans.",
+            "content": "One of Hollywood's most beloved couples has announced their engagement, sharing the exciting news with millions of fans on social media.\n\nThe couple, who have been together for three years, posted photos from the romantic proposal along with heartfelt messages to each other. Fellow celebrities and fans have flooded their posts with congratulations and well wishes.\n\nWhile no wedding date has been announced, sources close to the couple say they are planning an intimate ceremony with family and close friends. The engagement ring, featuring a rare diamond, is estimated to be worth several million dollars.",
+            "category": "Entertainment",
+            "author": "Entertainment Reporter",
+            "image": "/latest-entertainment.jpg",
+            "time": "1 hour ago",
+            "readTime": "3 min read"
+        },
+        {
+            "id": "15",
+            "title": "Tech Giant Unveils Revolutionary Quantum Processor",
+            "excerpt": "New 1000-qubit processor promises to break barriers in computational problem solving.",
+            "content": "A leading technology corporation has announced the successful development of a 1000-qubit quantum processor, a milestone that researchers have been working towards for decades.\n\nThe processor, which operates at temperatures colder than deep space, is capable of solving complex problems in seconds that would take traditional supercomputers millennia to process. The company stated that initial applications will focus on developing new materials and life-saving pharmaceuticals.\n\nIndustry experts expect early access to begin next year. The breakthrough marks a critical transition point from experimental quantum devices to practical commercial applications.",
+            "category": "Technology",
+            "author": "Technology Editor",
+            "image": "/editors-mars.jpg",
+            "time": "30 minutes ago",
+            "readTime": "4 min read"
+        },
+        {
+            "id": "16",
+            "title": "Global Markets Rally As Inflation Cools More Than Expected",
+            "excerpt": "Major indexes hit all-time highs following positive economic data releases.",
+            "content": "Global stock markets experienced a significant surge today following reports that inflation levels dropped more than anticipated in the last quarter.\n\nThe positive economic indicators suggest that central banks may pause or begin reversing their aggressive interest rate hike campaigns. The technology and real estate sectors led the rally, with several major indices charting new all-time highs by midday trading.\n\nEconomists have reacted positively to the news, seeing it as confirmation that the \"soft landing\" scenario for the global economy is becoming a reality, largely averting the previously feared deep recession.",
+            "category": "Business",
+            "author": "Finance Correspondent",
+            "image": "/side-story-business.jpg",
+            "time": "45 minutes ago",
+            "readTime": "5 min read",
+            "isBreaking": true
+        },
+        {
+            "id": "17",
+            "title": "Renewable Energy Surpasses Coal In Global Power Mix for First Time",
+            "excerpt": "Landmark achievement in the global shift towards sustainable energy grids.",
+            "content": "In a historic milestone for the global energy transition, electricity generated from renewable sources has officially surpassed coal in the worldwide power mix over a 12-month period.\n\nThe shift was driven by exponential growth in solar and wind installations across Asia, Europe, and North America, coupled with the retirement of older, inefficient coal plants. Solar power generation alone increased by a staggering 34% year-over-year, beating analyst expectations.\n\nEnvironmental advocates celebrated the milestone, but cautioned that grid infrastructure and storage solutions must be rapidly expanded to support further displacement of fossil fuels to maintain reliable energy supplies.",
+            "category": "Science",
+            "author": "Climate Editor",
+            "image": "/editors-ocean.jpg",
+            "time": "2 hours ago",
+            "readTime": "6 min read"
+        },
+        {
+            "id": "18",
+            "title": "Major Film Festival Awards Top Prize to Independent Documentary",
+            "excerpt": "A moving piece on global migration takes the highest honor, surprising critics.",
+            "content": "In an unexpected turn of events, the prestigious Grand Jury Prize at this year's International Film Festival was awarded to an independent documentary detailing the lives of undocumented migrants across three continents.\n\nShot over a period of seven years, the film beat out highly anticipated blockbusters and star-studded dramas. The jury praised its raw emotional power, innovative cinematography, and its unflinching look at one of the century's defining global issues.\n\nThe surprise win has immediately sparked distribution bidding wars and has positioned the film as a strong contender for upcoming major industry awards.",
+            "category": "Entertainment",
+            "author": "Arts Correspondent",
+            "image": "/latest-entertainment.jpg",
+            "time": "5 hours ago",
+            "readTime": "4 min read"
+        },
+        {
+            "id": "19",
+            "title": "Cybersecurity Experts Thwart Massive International Ransomware Campaign",
+            "excerpt": "Coordinated effort successfully dismantles a notorious hacking group's operations.",
+            "content": "An international coalition of cybersecurity agencies and private tech firms have successfully disrupted a massive, coordinated ransomware campaign targeting critical infrastructure networks worldwide.\n\nThe operation, which involved law enforcement agencies from over a dozen countries, resulted in the seizure of the group's servers, the freezing of millions in cryptocurrency assets, and the arrest of several key operatives. The hacking group had previously extorted billions of dollars from hospitals, schools, and energy providers.\n\nOfficials stated that the successful takedown serves as a stark warning to other cybercriminal syndicates, demonstrating that inter-agency collaboration can effectively map, infiltrate, and dismantle complex digital threats.",
+            "category": "Technology",
+            "author": "Cybersecurity Reporter",
+            "image": "/hero-featured.jpg",
+            "time": "4 hours ago",
+            "readTime": "7 min read"
+        },
+        {
+            "id": "20",
+            "title": "Breakthrough in Battery Tech Could Double Electric Vehicle Range",
+            "excerpt": "Solid-state battery cells move closer to commercial production following successful prototype tests.",
+            "content": "A prominent automotive startup has revealed test results for their new solid-state battery cells, demonstrating an energy density that could effectively double the driving range of current electric vehicles while halving charging times.\n\nUnlike traditional lithium-ion batteries that use liquid electrolytes, the new design uses a solid ceramic material that makes the batteries safer and less prone to overheating. The company noted that the batteries functioned perfectly even in extreme temperature conditions that usually degrade standard EV batteries.\n\nIf the technology can be scaled for mass production, industry analysts believe it will overcome one of the final remaining hurdles to widespread consumer adoption of electric vehicles globally.",
+            "category": "Technology",
+            "author": "Auto Industry Analyst",
+            "image": "/latest-wildlife.jpg",
+            "time": "1 hour ago",
+            "readTime": "5 min read"
+        }
+    ],
+    "videoStories": [
+        {
+            "id": "1",
+            "title": "Exclusive: Inside the UN Climate Summit",
+            "duration": "12:34",
+            "image": "/video-climate.jpg"
+        },
+        {
+            "id": "3",
+            "title": "Sports Highlights: Championship Finals",
+            "duration": "5:23",
+            "image": "/side-story-sports.jpg"
+        },
+        {
+            "id": "4",
+            "title": "Political Debate: Economic Policies",
+            "duration": "15:00",
+            "image": "/latest-politics.jpg"
+        },
+        {
+            "id": "5",
+            "title": "Tech Conference Keynote Summary",
+            "duration": "10:45",
+            "image": "/editors-mars.jpg"
+        },
+        {
+            "id": "6",
+            "title": "Behind the Scenes: Film Festival Winners",
+            "duration": "8:12",
+            "image": "/latest-entertainment.jpg"
+        }
+    ],
+    "trendingTopics": [
+        {
+            "id": "1",
+            "tag": "#ClimateChange",
+            "size": "large",
+            "count": "45.2K"
+        },
+        {
+            "id": "3",
+            "tag": "#Economy",
+            "size": "medium",
+            "count": "28.5K"
+        },
+        {
+            "id": "4",
+            "tag": "#Elections2024",
+            "size": "large",
+            "count": "41.8K"
+        },
+        {
+            "id": "5",
+            "tag": "#Sports",
+            "size": "small",
+            "count": "18.3K"
+        },
+        {
+            "id": "6",
+            "tag": "#Health",
+            "size": "small",
+            "count": "15.7K"
+        },
+        {
+            "id": "7",
+            "tag": "#Entertainment",
+            "size": "medium",
+            "count": "22.4K"
+        },
+        {
+            "id": "9",
+            "tag": "#Ukraine",
+            "size": "medium",
+            "count": "29.6K"
+        },
+        {
+            "id": "10",
+            "tag": "#Inflation",
+            "size": "small",
+            "count": "16.2K"
+        },
+        {
+            "id": "11",
+            "tag": "#QuantumComputing",
+            "size": "medium",
+            "count": "34.1K"
+        },
+        {
+            "id": "12",
+            "tag": "#RenewableEnergy",
+            "size": "large",
+            "count": "55.9K"
+        }
+    ],
+    "breakingNews": [
+        "Pakistan Stresses UN's Credibility Depends on Full Implementation of Its Resolutions",
+        "Prime Minister Shehbaz Sharif Addresses Ceremony Celebrating King Charles III Birthday",
+        "Pakistan Warns Against Efforts to Undermine UNRWA at UN Security Council",
+        "Ambassador Khalil Hashmi Inaugurates International Culture Day 2025 at Pakistan Embassy College Beijing",
+        "Global Markets Hit All-Time Highs Following Better-Than-Expected Inflation Reports",
+        "Major International Ransomware Network Dismantled in Inter-Agency Operation"
+    ]
+}

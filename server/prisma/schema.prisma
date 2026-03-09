@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model admin {
+  id           String @id
+  username     String @unique(map: "Admin_username_key") @db.VarChar(50)
+  passwordHash String @db.VarChar(255)
+}
+
+model article {
+  id         String    @id
+  title      String    @db.VarChar(255)
+  excerpt    String    @db.Text
+  content    String    @db.LongText
+  category   String    @db.VarChar(50)
+  author     String    @db.VarChar(100)
+  image      String    @db.LongText
+  time       String    @db.VarChar(50)
+  readTime   String?   @db.VarChar(50)
+  featured   Boolean   @default(false)
+  isBreaking Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime
+  comment    comment[]
+}
+
+model breakingnews {
+  id   Int    @id @default(autoincrement())
+  text String @db.Text
+}
+
+model comment {
+  id        String   @id
+  author    String   @db.VarChar(100)
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  articleId String
+  article   article  @relation(fields: [articleId], references: [id], onDelete: Cascade, map: "Comment_articleId_fkey")
+
+  @@index([articleId], map: "Comment_articleId_fkey")
+}
+
+model trendingtopic {
+  id    String @id
+  tag   String @db.VarChar(100)
+  count String @db.VarChar(20)
+  size  String @db.VarChar(20)
+}
+
+model videostory {
+  id       String  @id
+  title    String  @db.VarChar(255)
+  duration String  @db.VarChar(20)
+  image    String  @db.LongText
+  url      String? @db.LongText
+}

@@ -1,0 +1,118 @@
+{
+    "site": {
+        "name": "FMN",
+        "tagline": "NEWS",
+        "description": "Your trusted source for breaking news, in-depth analysis, and global perspectives.",
+        "location": "Islamabad, Pakistan",
+        "email": "info@fmnnews.co",
+        "phone": "+92 51 123 4567",
+        "copyright": "© 2025 FMN News. All rights reserved."
+    },
+    "navigation": [
+        {
+            "name": "Home",
+            "path": "/"
+        },
+        {
+            "name": "World",
+            "path": "/category/world"
+        },
+        {
+            "name": "Politics",
+            "path": "/category/politics"
+        },
+        {
+            "name": "Business",
+            "path": "/category/business"
+        },
+        {
+            "name": "Sports",
+            "path": "/category/sports"
+        },
+        {
+            "name": "Entertainment",
+            "path": "/category/entertainment"
+        }
+    ],
+    "socialLinks": [
+        {
+            "platform": "Facebook",
+            "url": "#",
+            "icon": "Facebook"
+        },
+        {
+            "platform": "Twitter",
+            "url": "#",
+            "icon": "Twitter"
+        },
+        {
+            "platform": "Instagram",
+            "url": "#",
+            "icon": "Instagram"
+        },
+        {
+            "platform": "Youtube",
+            "url": "#",
+            "icon": "Youtube"
+        },
+        {
+            "platform": "Rss",
+            "url": "#",
+            "icon": "Rss"
+        }
+    ],
+    "categories": [
+        {
+            "name": "World",
+            "color": "category-world"
+        },
+        {
+            "name": "Politics",
+            "color": "category-politics"
+        },
+        {
+            "name": "Business",
+            "color": "category-business"
+        },
+        {
+            "name": "Sports",
+            "color": "category-sports"
+        },
+        {
+            "name": "Entertainment",
+            "color": "category-entertainment"
+        },
+        {
+            "name": "Science",
+            "color": "category-science"
+        },
+        {
+            "name": "Health",
+            "color": "category-health"
+        }
+    ],
+    "footerLinks": {
+        "company": [
+            {
+                "name": "About Us",
+                "url": "#"
+            },
+            {
+                "name": "Careers",
+                "url": "#"
+            },
+            {
+                "name": "Contact",
+                "url": "#"
+            },
+            {
+                "name": "Privacy Policy",
+                "url": "#"
+            },
+            {
+                "name": "Terms",
+                "url": "#"
+            }
+        ]
+    }
+}

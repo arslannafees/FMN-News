@@ -1,0 +1,591 @@
+/* Google Fonts loaded via <link> tags in index.html for better performance */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 0 0% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 10%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 40%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 10%;
+    --destructive: 4 90% 58%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 88%;
+    --input: 0 0% 88%;
+    --ring: 0 0% 10%;
+    --radius: 0.5rem;
+
+    /* Custom News Colors */
+    --news-red: 4 79% 58%;
+    /* Updated to #EB483B approximate */
+    --news-blue: 207 79% 42%;
+    --news-purple: 277 70% 35%;
+    --news-green: 122 39% 34%;
+    --news-teal: 174 100% 24%;
+    --news-orange: 30 100% 44%;
+    --news-pink: 333 77% 37%;
+
+    /* Custom Easings */
+    --ease-dramatic: cubic-bezier(0.87, 0, 0.13, 1);
+    --ease-expo-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-expo-in: cubic-bezier(0.7, 0, 0.84, 0);
+    --ease-elastic: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-editorial: cubic-bezier(0.165, 0.840, 0.440, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Libre Franklin', 'Inter', sans-serif;
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'Playfair Display', serif;
+  }
+
+  /* Custom dark mode overrides for headings and descriptions */
+  .dark h1,
+  .dark h2,
+  .dark h3,
+  .dark h4,
+  .dark h5,
+  .dark h6,
+  .dark .font-display,
+  .dark .ap-section-header {
+    color: #EB483B !important;
+  }
+
+  .dark p,
+  .dark .text-gray-600,
+  .dark .text-gray-700,
+  .dark .text-gray-500 {
+    color: #ffffff !important;
+  }
+}
+
+@layer components {
+  .font-display {
+    font-family: 'Playfair Display', serif;
+  }
+
+  .font-body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .font-accent {
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  /* Breaking News Ticker Animation */
+  @keyframes ticker-scroll {
+    0% {
+      transform: translateX(0);
+    }
+
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .ticker-animation {
+    animation: ticker-scroll 60s linear infinite;
+  }
+
+  .animate-ticker {
+    animation: ticker-scroll 120s linear infinite;
+  }
+
+  .pause-ticker {
+    animation-play-state: paused;
+  }
+
+  /* Pulse Animation for Breaking News */
+  @keyframes pulse-dot {
+
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+
+    50% {
+      transform: scale(1.3);
+      opacity: 0.8;
+    }
+  }
+
+  .pulse-dot {
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  /* Float Animation */
+  @keyframes editorial-float {
+
+    0%,
+    100% {
+      transform: translateY(0) rotate(0deg);
+    }
+
+    25% {
+      transform: translateY(-8px) rotate(0.5deg);
+    }
+
+    50% {
+      transform: translateY(-4px) rotate(-0.3deg);
+    }
+
+    75% {
+      transform: translateY(-12px) rotate(0.2deg);
+    }
+  }
+
+  .float-animation {
+    animation: editorial-float 12s ease-in-out infinite;
+  }
+
+  /* Underline Animation */
+  .underline-animation {
+    position: relative;
+  }
+
+  .underline-animation::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: currentColor;
+    transition: width 0.3s var(--ease-expo-out);
+  }
+
+  .underline-animation:hover::after {
+    width: 100%;
+  }
+
+  /* Card Hover Effect */
+  .card-hover {
+    transition: transform 0.4s var(--ease-expo-out), box-shadow 0.4s var(--ease-expo-out);
+  }
+
+  .card-hover:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+  }
+
+  /* Image Zoom Effect */
+  .img-zoom {
+    overflow: hidden;
+  }
+
+  .img-zoom img {
+    transition: transform 0.6s var(--ease-expo-out);
+  }
+
+  .img-zoom:hover img {
+    transform: scale(1.08);
+  }
+
+  /* Gradient Overlay */
+  .gradient-overlay {
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 50%, transparent 100%);
+  }
+
+  /* Glass Effect */
+  .glass {
+    @apply bg-background/80 backdrop-blur-xl border border-white/20;
+  }
+
+  .dark .glass {
+    @apply bg-black/40 border-white/10;
+  }
+
+  /* Premium Spring Animation */
+  .spring-hover {
+    transition: transform 0.5s var(--ease-spring);
+  }
+
+  .spring-hover:hover {
+    transform: scale(1.02) translateY(-4px);
+  }
+
+  /* Fade In Up reveal */
+  @keyframes reveal-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .reveal-up {
+    animation: reveal-up 0.8s var(--ease-expo-out) both;
+  }
+
+  /* Reading Progress Bar */
+  .reading-progress-container {
+    @apply fixed top-0 left-0 w-full h-1 z-[100] bg-transparent pointer-events-none;
+  }
+
+  .reading-progress-bar {
+    @apply h-full bg-[#EB483B] transition-all duration-150 ease-out;
+    width: var(--progress, 0%);
+  }
+
+  /* Category Colors */
+  .category-world {
+    @apply bg-[#1565c0] text-white;
+  }
+
+  .category-politics {
+    @apply bg-[#6a1b9a] text-white;
+  }
+
+  .category-business {
+    @apply bg-[#2e7d32] text-white;
+  }
+
+  .category-sports {
+    @apply bg-[#ef6c00] text-white;
+  }
+
+  .category-entertainment {
+    @apply bg-[#ad1457] text-white;
+  }
+
+  .category-science {
+    @apply bg-[#0277bd] text-white;
+  }
+
+  .category-health {
+    @apply bg-[#00838f] text-white;
+  }
+
+  /* AP Style Elements */
+  .badge-live {
+    @apply bg-[#EB483B] text-white font-accent font-bold px-1.5 py-0.5 rounded-sm text-[10px] uppercase tracking-wider inline-flex items-center gap-1;
+  }
+
+  .numbered-list-item {
+    @apply flex gap-4 py-4 border-b last:border-0;
+  }
+
+  .number-rank {
+    @apply font-display text-4xl font-black text-gray-200 shrink-0 leading-none;
+  }
+
+  .ap-section-header {
+    @apply border-t-2 border-[#EB483B] pt-2 mb-6 font-display text-2xl font-black uppercase tracking-tight;
+  }
+}
+
+@layer utilities {
+  @supports (text-wrap: balance) {
+    .text-balance {
+      text-wrap: balance;
+    }
+  }
+
+  @supports (scrollbar-width: none) {
+    .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Line clamp utilities */
+  .line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+/* Prose styles for article content */
+.prose {
+  color: #374151;
+}
+
+.prose p {
+  margin-bottom: 1.25em;
+  line-height: 1.75;
+}
+
+.prose h2 {
+  font-size: 1.5em;
+  font-weight: 700;
+  margin-top: 2em;
+  margin-bottom: 0.75em;
+  color: #1a1a1a;
+}
+
+.prose h3 {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  color: #1a1a1a;
+}
+
+/* Advanced Typography */
+.article-drop-cap::first-letter {
+  @apply font-display text-7xl font-black float-left mr-3 mt-2 leading-[0.8] text-[#EB483B];
+}
+
+.article-lead-in {
+  @apply font-body text-xl sm:text-2xl font-medium text-gray-700 dark:text-zinc-300 leading-tight mb-8 border-l-4 border-[#EB483B] pl-6 py-2 italic;
+}
+
+/* Premium Shimmer Skeleton */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg,
+      var(--skeleton-base, rgba(200, 200, 200, 0.1)) 25%,
+      var(--skeleton-highlight, rgba(200, 200, 200, 0.2)) 50%,
+      var(--skeleton-base, rgba(200, 200, 200, 0.1)) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+}
+
+.dark .skeleton-shimmer {
+  --skeleton-base: rgba(255, 255, 255, 0.05);
+  --skeleton-highlight: rgba(255, 255, 255, 0.1);
+}
+
+/* Animation utilities */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-from-top {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-in {
+  animation-duration: 0.2s;
+  animation-fill-mode: both;
+}
+
+.fade-in {
+  animation-name: fade-in;
+}
+
+.slide-in-from-top-2 {
+  animation-name: slide-in-from-top;
+}
+
+/* Focus styles */
+*:focus-visible {
+  outline: 2px solid #e53935;
+  outline-offset: 2px;
+}
+
+/* Selection styles */
+::selection {
+  background-color: #e53935;
+  color: white;
+}
+
+/* Smooth image loading */
+img {
+  transition: opacity 0.3s ease;
+}
+
+/* Responsive typography */
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+/* Touch-friendly tap targets on mobile - scoped to avoid layout issues */
+@media (max-width: 768px) {
+
+  button:not([class*="h-"]):not([class*="text-"]),
+  a:not([class*="text-"]):not([class*="inline"]) {
+    min-height: 44px;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .ticker-animation {
+    animation: none;
+  }
+}
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+.delay-100 {
+  animation-delay: 0.1s;
+}
+
+.delay-200 {
+  animation-delay: 0.2s;
+}
+
+.delay-300 {
+  animation-delay: 0.3s;
+}
+
+.delay-400 {
+  animation-delay: 0.4s;
+}
+
+.delay-500 {
+  animation-delay: 0.5s;
+}
+
+.delay-600 {
+  animation-delay: 0.6s;
+}
+
+.delay-700 {
+  animation-delay: 0.7s;
+}
+
+.delay-800 {
+  animation-delay: 0.8s;
+}
+
+.delay-900 {
+  animation-delay: 0.9s;
+}
+
+.delay-1000 {
+  animation-delay: 1s;
+}
+
+.delay-4000 {
+  animation-delay: 4s;
+}
+
+.trending-item {
+  animation-delay: var(--delay, 0s);
+}
