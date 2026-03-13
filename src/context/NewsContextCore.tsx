@@ -46,15 +46,24 @@ export interface NewsContextType {
     addComment: (articleId: string, comment: Omit<ArticleComment, 'id' | 'createdAt'>) => void;
     deleteComment: (articleId: string, commentId: string) => void;
     isAdmin: boolean;
+    isSuperAdmin: boolean;
     setIsAdmin: (value: boolean) => void;
+    adminAccounts: { id: string; username: string; role: string }[];
+    fetchAdminAccounts: () => Promise<void>;
+    createAdminAccount: (username: string, password: string, role: string) => Promise<void>;
+    deleteAdminAccount: (id: string) => Promise<void>;
     customImages: string[];
     libraryImages: string[];
     addCustomImage: (image: string) => void;
     deleteImage: (image: string) => void;
-    login: (password: string) => Promise<boolean>;
+    currentUsername: string;
+    changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+    login: (username: string, password: string) => Promise<{ success: boolean; role: string | null }>;
     logout: () => void;
     loading: boolean;
     error: string | null;
+    loadMore: () => Promise<void>;
+    hasMore: boolean;
 }
 
 export const PREDEFINED_IMAGES = [

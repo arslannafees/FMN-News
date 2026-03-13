@@ -54,7 +54,7 @@ export function Category() {
           {featuredArticle && (
             <div className="mb-8 sm:mb-12">
               <Link to={`/article/${featuredArticle.id}`}>
-                <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 bg-white rounded-lg lg:rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all cursor-pointer group">
+                <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 bg-white dark:bg-zinc-800 rounded-lg lg:rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all cursor-pointer group">
                   <div className="h-48 sm:h-64 lg:h-80 overflow-hidden">
                     <img
                       src={featuredArticle.image}
@@ -66,13 +66,13 @@ export function Category() {
                     <span className={`inline-block w-fit px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-accent font-semibold mb-3 sm:mb-4 ${categoryColors[featuredArticle.category]}`}>
                       {featuredArticle.category}
                     </span>
-                    <h2 className="font-display text-lg sm:text-xl lg:text-2xl font-bold text-[#1a1a1a] group-hover:text-[#e53935] transition-colors mb-3 sm:mb-4">
+                    <h2 className="font-display text-lg sm:text-xl lg:text-2xl font-bold text-[#1a1a1a] dark:text-zinc-100 group-hover:text-[#e53935] transition-colors mb-3 sm:mb-4">
                       {featuredArticle.title}
                     </h2>
-                    <p className="text-gray-600 text-sm mb-4 sm:mb-6 line-clamp-3">
+                    <p className="text-gray-600 dark:text-zinc-300 text-sm mb-4 sm:mb-6 line-clamp-3">
                       {featuredArticle.excerpt}
                     </p>
-                    <div className="flex items-center gap-3 sm:gap-4 text-gray-500 text-xs">
+                    <div className="flex items-center gap-3 sm:gap-4 text-gray-500 dark:text-zinc-400 text-xs">
                       <span className="flex items-center gap-1">
                         <User size={12} />
                         {featuredArticle.author}
@@ -97,7 +97,7 @@ export function Category() {
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {otherArticles.map((article) => (
                   <Link key={article.id} to={`/article/${article.id}`}>
-                    <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer group h-full">
+                    <div className="bg-white dark:bg-zinc-800 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer group h-full">
                       <div className="h-40 sm:h-44 overflow-hidden">
                         <img
                           src={article.image}
@@ -109,13 +109,13 @@ export function Category() {
                         <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-accent font-semibold mb-2 ${categoryColors[article.category]}`}>
                           {article.category}
                         </span>
-                        <h3 className="font-display text-sm sm:text-base font-semibold text-[#1a1a1a] group-hover:text-[#e53935] transition-colors line-clamp-2 mb-2">
+                        <h3 className="font-display text-sm sm:text-base font-semibold text-[#1a1a1a] dark:text-zinc-100 group-hover:text-[#e53935] transition-colors line-clamp-2 mb-2">
                           {article.title}
                         </h3>
-                        <p className="text-gray-500 text-xs line-clamp-2 mb-2">
+                        <p className="text-gray-500 dark:text-zinc-400 text-xs line-clamp-2 mb-2">
                           {article.excerpt}
                         </p>
-                        <span className="text-[10px] sm:text-xs text-gray-400 flex items-center gap-1">
+                        <span className="text-[10px] sm:text-xs text-gray-400 dark:text-zinc-500 flex items-center gap-1">
                           <Clock size={10} />
                           {article.time}
                         </span>

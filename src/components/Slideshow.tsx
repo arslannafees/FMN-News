@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { User, Clock } from 'lucide-react';
+import { timeAgo } from '@/utils/timeAgo';
 import {
     Carousel,
     CarouselContent,
@@ -82,7 +83,7 @@ export function Slideshow({ articles, categoryColors }: SlideshowProps) {
                                         </span>
                                         <span className="flex items-center gap-1">
                                             <Clock size={12} />
-                                            {article.time}
+                                            {timeAgo(article.createdAt, article.time)}
                                         </span>
                                     </div>
                                 </div>

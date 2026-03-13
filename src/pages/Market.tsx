@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { fetchEnhancedMarketData, fetchHistoricalMarketData, type EnhancedMarketData, type OHLCData } from '../services/newsService';
-import { CandlestickChart } from '../components/CandlestickChart';
+import { fetchEnhancedMarketData, fetchHistoricalLineData, type EnhancedMarketData, type LineData } from '../services/newsService';
+import { LineChart } from '../components/LineChart';
 import { ArrowLeftRight, TrendingUp, TrendingDown, Activity, Loader2, ChevronRight, BarChart3, Coins } from 'lucide-react';
 
 const CATEGORIES = ['All', 'Forex', 'Crypto'] as const;
@@ -11,7 +11,7 @@ type BaseCurrency = typeof CURRENCIES[number];
 
 export function Market() {
     const [data, setData] = useState<EnhancedMarketData | null>(null);
-    const [historicalData, setHistoricalData] = useState<OHLCData[]>([]);
+    const [historicalData, setHistoricalData] = useState<LineData[]>([]);
     const [activeSymbol, setActiveSymbol] = useState<string>('EUR');
     const [activeCategory, setActiveCategory] = useState<Category>('All');
     const [baseCurrency, setBaseCurrency] = useState<BaseCurrency>((localStorage.getItem('market_base_currency') as BaseCurrency) || 'USD');
@@ -54,7 +54,7 @@ export function Market() {
         const loadHistorical = async () => {
             setLoadingChart(true);
             try {
-                const history = await fetchHistoricalMarketData(activeSymbol, baseCurrency);
+                const history = await fetchHistoricalLineData(activeSymbol, baseCurrency);
                 setHistoricalData(history);
             } catch (err) {
                 console.error('Failed to load chart data', err);
@@ -187,9 +187,9 @@ export function Market() {
 
                                     <div className="flex flex-col items-end">
                                         <div className="text-4xl font-bold tracking-tight text-gray-800 dark:text-zinc-100">
-                                            {activeItem.value.toLocaleString(undefined, {
-                                                minimumFractionDigits: activeItem.value < 10 ? 4 : 2,
-                                                maximumFractionDigits: activeItem.value < 10 ? 4 : 2
+                                            {(activeItem.value ?? 0).toLocaleString(undefined, {
+                                                minimumFractionDigits: (activeItem.value ?? 0) < 10 ? 4 : 2,
+                                                maximumFractionDigits: (activeItem.value ?? 0) < 10 ? 4 : 2
                                             })}
                                             <span className="ml-2 text-xl font-bold text-gray-400 dark:text-zinc-600">{baseCurrency}</span>
                                         </div>
@@ -200,15 +200,15 @@ export function Market() {
                                     </div>
                                 </div>
 
-                                <div className="mt-8 border-t border-gray-100 dark:border-zinc-900 pt-6 relative z-10">
+<div className="mt-8 border-t border-gray-100 dark:border-zinc-900 pt-6 relative z-10">
                                     <div className="flex items-center gap-2 mb-4 text-gray-500 dark:text-zinc-400 font-medium text-sm text-lg">
-                                        <BarChart3 size={20} className="text-blue-500" /> Historical Performance (6 Months)
+                                        <BarChart3 size={20} className="text-blue-500" /> Price History (6 Months)
                                     </div>
                                     <div className="bg-gray-50 dark:bg-[#0c0c0e] rounded-xl border border-gray-100 dark:border-zinc-800 p-2 min-h-[400px] flex items-center justify-center relative">
                                         {loadingChart ? (
                                             <Loader2 className="animate-spin text-blue-500" size={32} />
                                         ) : historicalData.length > 0 ? (
-                                            <CandlestickChart data={historicalData} />
+                                            <LineChart data={historicalData} />
                                         ) : (
                                             <span className="text-gray-400">No chart data available for this benchmark</span>
                                         )}
@@ -263,9 +263,9 @@ export function Market() {
                                             <div className="flex items-center gap-4">
                                                 <div className="flex flex-col items-end">
                                                     <span className="font-semibold text-gray-800 dark:text-zinc-200 text-sm">
-                                                        {item.value.toLocaleString(undefined, {
-                                                            minimumFractionDigits: item.value < 10 ? 3 : 2,
-                                                            maximumFractionDigits: item.value < 10 ? 3 : 2
+                                                        {(item.value ?? 0).toLocaleString(undefined, {
+                                                            minimumFractionDigits: (item.value ?? 0) < 10 ? 3 : 2,
+                                                            maximumFractionDigits: (item.value ?? 0) < 10 ? 3 : 2
                                                         })}
                                                     </span>
                                                     <span className={`text-[10px] font-bold flex items-center gap-0.5 mt-0.5 ${item.isUp ? 'text-green-600 dark:text-green-500' : 'text-red-500 dark:text-red-500'}`}>

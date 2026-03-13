@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
+import { timeAgo } from '@/utils/timeAgo';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ChevronRight, Clock, User, Play, TrendingUp, ArrowRight,
-  Mail, Check, X
+  Mail, Check, X, Zap, MessageCircle, History, RefreshCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,7 +29,10 @@ export function Home() {
     videoStories,
     trendingTopics,
     config,
-    categoryColors
+    categoryColors,
+    loadMore,
+    hasMore,
+    loading,
   } = useNews();
   const navigate = useNavigate();
 
@@ -60,6 +64,56 @@ export function Home() {
   }).slice(0, 6); // Keep it to 6 for the grid
 
   const [playingVideo, setPlayingVideo] = useState<VideoStory | null>(null);
+
+  // Reading history — articles visited previously, stored in localStorage
+  const [continueReading, setContinueReading] = useState<typeof articles>([]);
+  useEffect(() => {
+    try {
+      const ids: string[] = JSON.parse(localStorage.getItem('fmn_history') || '[]');
+      const found = ids.map(id => articles.find(a => a.id === id)).filter(Boolean) as typeof articles;
+      // Hide articles read past 90% — nothing left to continue
+      const unfinished = found.filter(a => parseFloat(localStorage.getItem(`fmn_read_${a.id}`) || '0') < 90);
+      setContinueReading(unfinished.slice(0, 6));
+    } catch { /* ignore */ }
+  }, [articles]);
+
+  const removeFromHistory = (articleId: string) => {
+    try {
+      const ids: string[] = JSON.parse(localStorage.getItem('fmn_history') || '[]');
+      const updated = ids.filter(id => id !== articleId);
+      localStorage.setItem('fmn_history', JSON.stringify(updated));
+      setContinueReading(prev => prev.filter(a => a.id !== articleId));
+    } catch { /* ignore */ }
+  };
+
+  const clearHistory = () => {
+    localStorage.removeItem('fmn_history');
+    setContinueReading([]);
+  };
+
+  // Just In — latest 5 articles, auto-refreshes every 30s via API
+  const [justIn, setJustIn] = useState<typeof articles>([]);
+  const fetchJustIn = async () => {
+    try {
+      const apiBase = import.meta.env.VITE_API_URL || `${window.location.protocol}//${window.location.hostname}:5000/api`;
+      const res = await fetch(`${apiBase}/articles?limit=5&page=1`);
+      if (res.ok) {
+        const data = await res.json();
+        setJustIn(Array.isArray(data) ? data.slice(0, 5) : (data.articles || []).slice(0, 5));
+      }
+    } catch { /* ignore */ }
+  };
+  useEffect(() => {
+    fetchJustIn();
+    const t = setInterval(fetchJustIn, 30_000);
+    return () => clearInterval(t);
+  }, []);
+
+  // Most Commented — sorted by comment count
+  const mostCommented = [...articles]
+    .filter(a => (a.comments?.length || 0) > 0)
+    .sort((a, b) => (b.comments?.length || 0) - (a.comments?.length || 0))
+    .slice(0, 5);
 
   useEffect(() => {
     // Don't run animations until data has loaded and real DOM elements exist
@@ -152,6 +206,53 @@ export function Home() {
 
   return (
     <div>
+      {/* Continue Reading Strip */}
+      {continueReading.length > 0 && (
+        <section aria-label="Continue reading" className="border-b border-gray-100 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/50 py-2 px-4 transition-colors duration-300">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1.5 shrink-0 pr-4 border-r border-gray-200 dark:border-zinc-700">
+                <History size={11} className="text-[#EB483B]" />
+                <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Continue Reading</span>
+              </div>
+              <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide flex-1">
+                {continueReading.map(a => (
+                  <div key={a.id} className="flex items-center gap-2 group shrink-0">
+                    <Link to={`/article/${a.id}`} className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded overflow-hidden shrink-0 bg-gray-200 dark:bg-zinc-700">
+                        <img src={a.image} alt={a.title} className="w-full h-full object-cover" />
+                      </div>
+                      <span className="text-[10px] font-bold text-gray-600 dark:text-zinc-400 group-hover:text-[#EB483B] transition-colors line-clamp-1 max-w-[140px]">
+                        {a.title}
+                      </span>
+                      {(parseFloat(localStorage.getItem(`fmn_read_${a.id}`) || '0') > 2) && (
+                        <div className="w-10 h-1 bg-gray-200 dark:bg-zinc-700 rounded-full overflow-hidden shrink-0">
+                          <div className="h-full bg-[#EB483B] rounded-full" style={{ width: `${localStorage.getItem(`fmn_read_${a.id}`)}%` }} />
+                        </div>
+                      )}
+                    </Link>
+                    <button
+                      onClick={() => removeFromHistory(a.id)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded-full hover:bg-gray-200 dark:hover:bg-zinc-700 text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 shrink-0"
+                      title="Remove from history"
+                    >
+                      <X size={10} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={clearHistory}
+                className="shrink-0 ml-auto pl-4 border-l border-gray-200 dark:border-zinc-700 text-[9px] font-bold uppercase tracking-widest text-gray-400 hover:text-[#EB483B] transition-colors"
+                title="Clear reading history"
+              >
+                Clear all
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Hero Section */}
       <section ref={heroRef} aria-label="Featured news" className="py-4 sm:py-6 lg:py-8 px-4 border-b border-gray-100 dark:border-zinc-800 reveal-up">
         <div className="max-w-7xl mx-auto">
@@ -183,11 +284,11 @@ export function Home() {
                       </div>
                       <div className="flex flex-col min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                          <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${categoryColors[story.category] || 'bg-gray-100 text-gray-500'}`}>
                             {story.category}
                           </span>
                         </div>
-                        <h3 className="font-display text-sm font-black text-[#1a1a1a] group-hover:text-[#EB483B] transition-colors line-clamp-2 leading-tight">
+                        <h3 className="font-display text-sm font-black text-[#1a1a1a] dark:text-zinc-100 group-hover:text-[#EB483B] transition-colors line-clamp-2 leading-tight">
                           {story.title}
                         </h3>
                       </div>
@@ -197,8 +298,33 @@ export function Home() {
               </div>
             </div>
 
-            {/* Sidebar (Most Read) */}
-            <div className="lg:col-span-4 space-y-8">
+            {/* Sidebar (Just In + Most Read) */}
+            <div className="lg:col-span-4 space-y-6">
+              {/* Just In panel */}
+              <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-800 overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-zinc-800">
+                  <div className="flex items-center gap-2">
+                    <Zap size={13} className="text-[#EB483B]" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-[#1a1a1a] dark:text-zinc-100">Just In</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#EB483B] pulse-dot" />
+                  </div>
+                  <button onClick={fetchJustIn} className="p-1 rounded hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors" title="Refresh">
+                    <RefreshCw size={11} className="text-gray-400" />
+                  </button>
+                </div>
+                <div className="divide-y divide-gray-50 dark:divide-zinc-800">
+                  {(justIn.length > 0 ? justIn : articles.slice(0, 5)).map((a, i) => (
+                    <Link key={a.id} to={`/article/${a.id}`} className="flex items-start gap-3 px-4 py-3 group hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors">
+                      <span className="text-[10px] font-black text-gray-200 dark:text-zinc-700 tabular-nums shrink-0 mt-0.5">{String(i + 1).padStart(2, '0')}</span>
+                      <div className="min-w-0">
+                        <span className={`text-[9px] font-black uppercase tracking-widest block mb-0.5 ${categoryColors[a.category] ? '' : 'text-[#EB483B]'}`} style={{ color: '#EB483B' }}>{a.category}</span>
+                        <h4 className="font-display text-xs font-bold text-[#1a1a1a] dark:text-zinc-100 group-hover:text-[#EB483B] transition-colors line-clamp-2 leading-snug">{a.title}</h4>
+                        <span className="text-[9px] text-gray-400 mt-0.5 block">{timeAgo(a.createdAt, a.time)}</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
               <MostReadSidebar />
             </div>
           </div>
@@ -223,7 +349,7 @@ export function Home() {
                 <div
                   className="editors-item bg-white dark:bg-zinc-800 rounded-lg lg:rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 card-hover cursor-pointer group h-full"
                 >
-                  <div className="h-40 sm:h-44 lg:h-48 overflow-hidden img-zoom">
+                  <div className="h-40 sm:h-44 lg:h-48 overflow-hidden img-zoom relative">
                     <img
                       src={article.image}
                       alt={article.title}
@@ -232,6 +358,16 @@ export function Home() {
                       height={192}
                       loading="lazy"
                     />
+                    {article.isBreaking && (
+                      <span className="badge-live absolute top-2 left-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-white pulse-dot" />LIVE
+                      </span>
+                    )}
+                    {parseFloat(localStorage.getItem(`fmn_read_${article.id}`) || '0') > 2 && (
+                      <div className="card-read-progress">
+                        <div className="card-read-progress-bar" style={{ width: `${localStorage.getItem(`fmn_read_${article.id}`)}%` }} />
+                      </div>
+                    )}
                   </div>
                   <div className="p-4 sm:p-5">
                     <div className="flex items-center justify-between mb-2 sm:mb-3">
@@ -253,6 +389,41 @@ export function Home() {
           </div>
         </div>
       </section>
+
+      {/* Most Commented */}
+      {mostCommented.length > 0 && (
+        <section aria-label="Most commented" className="py-8 sm:py-10 px-4 reveal-up">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <MessageCircle size={20} className="text-[#e53935]" />
+                <div>
+                  <h2 className="ap-section-header">Most Discussed</h2>
+                </div>
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+              {mostCommented.map((a, i) => (
+                <Link key={a.id} to={`/article/${a.id}`} className="group">
+                  <div className="bg-white dark:bg-zinc-800 rounded-xl p-4 border border-gray-100 dark:border-zinc-700 hover:shadow-md hover:border-[#EB483B]/20 transition-all h-full">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-[9px] font-black uppercase tracking-widest text-[#EB483B]">{a.category}</span>
+                      <span className="ml-auto flex items-center gap-1 text-[9px] font-bold text-gray-400">
+                        <MessageCircle size={9} />{a.comments?.length || 0}
+                      </span>
+                    </div>
+                    <h4 className="font-display text-sm font-bold text-[#1a1a1a] dark:text-zinc-100 group-hover:text-[#EB483B] transition-colors line-clamp-3 leading-snug">
+                      {i === 0 && <span className="inline-block w-4 h-4 bg-[#EB483B] text-white text-[8px] font-black rounded-full text-center leading-4 mr-1">1</span>}
+                      {a.title}
+                    </h4>
+                    <p className="text-[10px] text-gray-400 mt-2 flex items-center gap-1"><User size={9} />{a.author}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Categories Grid */}
       <section ref={categoriesRef} aria-label="Browse categories" className="py-8 sm:py-10 lg:py-12 px-4">
@@ -343,7 +514,7 @@ export function Home() {
                         </span>
                         <span className="flex items-center gap-2">
                           <Clock size={14} />
-                          {latestNews[0].time}
+                          {timeAgo(latestNews[0].createdAt, latestNews[0].time)}
                         </span>
                       </div>
                     </div>
@@ -375,7 +546,7 @@ export function Home() {
                           <span className="text-[9px] font-black uppercase tracking-wider text-[#EB483B]">
                             {article.category}
                           </span>
-                          <span className="text-[9px] font-bold text-gray-400">• {article.time}</span>
+                          <span className="text-[9px] font-bold text-gray-400">• {timeAgo(article.createdAt, article.time)}</span>
                         </div>
                         <h4 className="font-display text-sm font-bold text-[#1a1a1a] dark:text-zinc-100 group-hover:text-[#EB483B] transition-colors line-clamp-2 leading-tight">
                           {article.title}
@@ -385,9 +556,15 @@ export function Home() {
                   </Link>
                 ))}
               </div>
-              <button className="w-full py-4 mt-4 rounded-xl border-2 border-dashed border-gray-100 dark:border-zinc-800 text-gray-400 font-accent font-bold text-[10px] uppercase tracking-widest hover:border-[#EB483B] hover:text-[#EB483B] transition-all">
-                Load More Updates
-              </button>
+              {hasMore && (
+                <button
+                  onClick={loadMore}
+                  disabled={loading}
+                  className="w-full py-4 mt-4 rounded-xl border-2 border-dashed border-gray-100 dark:border-zinc-800 text-gray-400 font-accent font-bold text-[10px] uppercase tracking-widest hover:border-[#EB483B] hover:text-[#EB483B] transition-all disabled:opacity-50"
+                >
+                  {loading ? 'Loading...' : 'Load More Updates'}
+                </button>
+              )}
             </div>
           </div>
 
@@ -450,11 +627,11 @@ export function Home() {
       </section>
 
       {/* Video Stories */}
-      <section ref={videoRef} aria-label="Video stories" className="py-8 sm:py-10 lg:py-12 px-4 bg-gray-50">
+      <section ref={videoRef} aria-label="Video stories" className="py-8 sm:py-10 lg:py-12 px-4 bg-gray-50 dark:bg-zinc-900/50">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-6 lg:mb-8">
             <div>
-              <h2 className="font-display text-xl sm:text-2xl lg:text-3xl font-bold text-[#1a1a1a]">Video Stories</h2>
+              <h2 className="font-display text-xl sm:text-2xl lg:text-3xl font-bold text-[#1a1a1a] dark:text-zinc-100">Video Stories</h2>
               <div className="w-16 sm:w-20 h-1 bg-[#e53935] mt-2"></div>
             </div>
           </div>

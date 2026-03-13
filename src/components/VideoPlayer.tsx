@@ -1,17 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
     Play, Pause, Volume2, VolumeX, Maximize2, Minimize2,
-    Video, Settings2, Check
+    Video, Settings2
 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
-    DropdownMenuItem,
     DropdownMenuTrigger,
-    DropdownMenuSeparator,
-    DropdownMenuLabel
 } from '@/components/ui/dropdown-menu';
 import gsap from 'gsap';
 
@@ -20,13 +17,12 @@ interface VideoPlayerProps {
     title?: string;
 }
 
-type Quality = 'Auto' | '1080p' | '720p' | '480p';
-
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, title }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const controlsRef = useRef<HTMLDivElement>(null);
     const timeoutRef = useRef<number | null>(null);
+    const volumeLeaveTimer = useRef<number | null>(null);
 
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
@@ -34,11 +30,20 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, title }) => {
     const [volume, setVolume] = useState(1);
     const [isMuted, setIsMuted] = useState(false);
     const [playbackRate, setPlaybackRate] = useState(1);
-    const [quality, setQuality] = useState<Quality>('Auto');
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [error, setError] = useState(false);
     const [showControls, setShowControls] = useState(true);
     const [isHovering, setIsHovering] = useState(false);
+    const [showVolumeBar, setShowVolumeBar] = useState(false);
+
+    const handleVolumeEnter = useCallback(() => {
+        if (volumeLeaveTimer.current) window.clearTimeout(volumeLeaveTimer.current);
+        setShowVolumeBar(true);
+    }, []);
+
+    const handleVolumeLeave = useCallback(() => {
+        volumeLeaveTimer.current = window.setTimeout(() => setShowVolumeBar(false), 300);
+    }, []);
 
     // Optimized Control Visibility Handler
     const handleMouseMove = useCallback(() => {
@@ -264,7 +269,29 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, title }) => {
                             {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" className="ml-0.5" />}
                         </Button>
 
-                        <div className="flex items-center gap-1 sm:gap-2 group/volume relative">
+                        <div
+                            className="flex items-center gap-1 sm:gap-2 relative"
+                            onMouseEnter={handleVolumeEnter}
+                            onMouseLeave={handleVolumeLeave}
+                        >
+                            {/* Vertical volume bar popup */}
+                            <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 flex flex-col items-center z-[200] transition-all duration-200 ${showVolumeBar ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+                                <div className="bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl px-2.5 py-2.5 shadow-2xl flex flex-col items-center gap-1.5">
+                                    <span className="text-white/50 text-[9px] font-mono tabular-nums">{Math.round((isMuted ? 0 : volume) * 100)}%</span>
+                                    <div className="h-14 flex items-center justify-center">
+                                        <Slider
+                                            orientation="vertical"
+                                            value={[isMuted ? 0 : volume]}
+                                            max={1}
+                                            step={0.01}
+                                            onValueChange={handleVolumeChange}
+                                            className="[&[data-orientation=vertical]]:min-h-0 [&[data-orientation=vertical]]:h-full [&_[data-slot=slider-thumb]]:bg-[#EB483B] [&_[data-slot=slider-thumb]]:border-[#EB483B] [&_[data-slot=slider-thumb]]:shadow-[0_0_8px_rgba(235,72,59,0.6)] [&_[data-slot=slider-range]]:bg-[#EB483B] [&_[data-slot=slider-track]]:bg-white/10"
+                                        />
+                                    </div>
+                                </div>
+                                {/* Arrow pointer */}
+                                <div className="w-2 h-2 bg-zinc-900/95 border-r border-b border-white/10 rotate-45 -mt-1"></div>
+                            </div>
                             <Button
                                 variant="ghost"
                                 size="icon"
@@ -273,15 +300,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, title }) => {
                             >
                                 {isMuted || volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
                             </Button>
-                            <div className="w-0 overflow-hidden group-hover/volume:w-20 sm:group-hover/volume:w-24 transition-all duration-500 ease-in-out">
-                                <Slider
-                                    value={[isMuted ? 0 : volume]}
-                                    max={1}
-                                    step={0.01}
-                                    onValueChange={handleVolumeChange}
-                                    className="w-16 sm:w-20 ml-2"
-                                />
-                            </div>
                         </div>
 
                         <div className="text-white text-[10px] sm:text-xs lg:text-sm font-medium font-mono tabular-nums opacity-90 hidden xs:block">
@@ -290,44 +308,42 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, title }) => {
                     </div>
 
                     <div className="flex items-center gap-1 sm:gap-2">
-                        {/* Quality & Settings Dropdown */}
+                        {/* Settings Dropdown */}
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-full h-9 w-9 sm:h-10 sm:w-10">
                                     <Settings2 size={18} />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="bg-[#121212]/95 backdrop-blur-xl border-white/10 text-white min-w-[140px] shadow-2xl z-[150]">
-                                <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-white/40 px-3 py-2">Playback Speed</DropdownMenuLabel>
-                                {[0.5, 0.75, 1, 1.25, 1.5, 2].map((rate) => (
-                                    <DropdownMenuItem
-                                        key={rate}
-                                        className="hover:bg-white/10 cursor-pointer focus:bg-white/10 focus:text-white flex justify-between items-center px-3 py-1.5 transition-colors"
-                                        onClick={() => {
-                                            if (videoRef.current) {
-                                                videoRef.current.playbackRate = rate;
-                                                setPlaybackRate(rate);
-                                            }
-                                        }}
-                                    >
-                                        <span className="text-sm">{rate}x</span>
-                                        {playbackRate === rate && <Check size={14} className="text-[#EB483B]" />}
-                                    </DropdownMenuItem>
-                                ))}
+                            <DropdownMenuContent align="end" className="bg-black backdrop-blur-xl border-white/10 text-white min-w-[200px] shadow-2xl z-[150] p-0 overflow-hidden rounded-xl">
+                                {/* Playback Speed Section */}
+                                <div className="px-3 pt-3 pb-3">
+                                    <div className="flex items-center gap-2 mb-2.5">
+                                        <div className="w-[3px] h-4 bg-[#EB483B] rounded-full"></div>
+                                        <span className="text-[10px] uppercase tracking-widest text-white/50 font-semibold">Playback Speed</span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {[0.5, 0.75, 1, 1.25, 1.5, 2].map((rate) => (
+                                            <button
+                                                key={rate}
+                                                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all duration-150 ${
+                                                    playbackRate === rate
+                                                        ? 'bg-[#EB483B] text-white shadow-[0_0_10px_rgba(235,72,59,0.4)]'
+                                                        : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+                                                }`}
+                                                onClick={() => {
+                                                    if (videoRef.current) {
+                                                        videoRef.current.playbackRate = rate;
+                                                        setPlaybackRate(rate);
+                                                    }
+                                                }}
+                                            >
+                                                {rate}x
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
 
-                                <DropdownMenuSeparator className="bg-white/5" />
-
-                                <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-white/40 px-3 py-2">Quality</DropdownMenuLabel>
-                                {(['Auto', '1080p', '720p', '480p'] as Quality[]).map((q) => (
-                                    <DropdownMenuItem
-                                        key={q}
-                                        className="hover:bg-white/10 cursor-pointer focus:bg-white/10 focus:text-white flex justify-between items-center px-3 py-1.5 transition-colors"
-                                        onClick={() => setQuality(q)}
-                                    >
-                                        <span className="text-sm">{q}</span>
-                                        {quality === q && <Check size={14} className="text-[#EB483B]" />}
-                                    </DropdownMenuItem>
-                                ))}
                             </DropdownMenuContent>
                         </DropdownMenu>
 

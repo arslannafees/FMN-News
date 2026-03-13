@@ -2,7 +2,7 @@ import { useState, useEffect, type ReactNode } from 'react';
 import type { Article, VideoStory, TrendingTopic, ArticleComment } from '@/types/news';
 import initialData from '@/data/initialData.json';
 import siteConfig from '@/data/siteConfig.json';
-import { fetchArticles, fetchVideos, fetchDynamicTrending, fetchBreakingNews } from '@/services/newsService';
+import { fetchArticles, fetchArticlesPaginated, fetchVideos, fetchDynamicTrending, fetchBreakingNews } from '@/services/newsService';
 import {
   NewsContext,
   PREDEFINED_IMAGES,
@@ -11,7 +11,18 @@ import {
   type SiteConfig,
 } from './NewsContextCore';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5001/api';
+const getAPIBaseURL = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  // Development: construct URL based on current host
+  const hostname = window.location.hostname;
+  const port = 5000;
+  const protocol = window.location.protocol;
+  return `${protocol}//${hostname}:${port}/api`;
+};
+
+const API_BASE_URL = getAPIBaseURL();
 
 export function NewsProvider({ children }: { children: ReactNode }) {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -20,6 +31,9 @@ export function NewsProvider({ children }: { children: ReactNode }) {
   const [breakingNews, setBreakingNews] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const PAGE_SIZE = 20;
 
   const [customImages, setCustomImages] = useState<string[]>(() => {
     const saved = localStorage.getItem('fmn_custom_images');
@@ -43,9 +57,15 @@ export function NewsProvider({ children }: { children: ReactNode }) {
     }
   });
 
-  const [isAdmin, setIsAdmin] = useState(() => {
-    return sessionStorage.getItem('fmn_admin_auth') === 'true';
-  });
+  const [isAdmin, setIsAdmin] = useState(() => !!sessionStorage.getItem('fmn_admin_token'));
+  const [isSuperAdmin, setIsSuperAdmin] = useState(() => sessionStorage.getItem('fmn_admin_role') === 'superadmin');
+  const [currentUsername, setCurrentUsername] = useState(() => sessionStorage.getItem('fmn_admin_username') ?? '');
+  const [adminAccounts, setAdminAccounts] = useState<{ id: string; username: string; role: string }[]>([]);
+
+  const getAuthHeader = (): Record<string, string> => {
+    const token = sessionStorage.getItem('fmn_admin_token');
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
+  };
   const config = siteConfig as SiteConfig;
   const categoryColors = getCategoryColors(config);
 
@@ -54,7 +74,6 @@ export function NewsProvider({ children }: { children: ReactNode }) {
     const loadAllData = async () => {
       setLoading(true);
       try {
-        console.log('Fetching data from MySQL API...');
         const [dbArticles, dbVideos, dbTrending, dbBreaking] = await Promise.all([
           fetchArticles(),
           fetchVideos(),
@@ -63,10 +82,19 @@ export function NewsProvider({ children }: { children: ReactNode }) {
         ]);
 
         // Filter out any temporary blob URLs that might have been saved in the DB
-        const cleanedArticles = dbArticles.map((article: Article) => ({
-          ...article,
-          image: article.image?.startsWith('blob:') ? '/hero-featured.jpg' : article.image
-        }));
+        // Also deserialize tags from comma-string to string[]
+        const cleanedArticles = dbArticles.map((article: Article & { comment?: ArticleComment[] }) => {
+          const rawTags = article.tags as unknown;
+          return {
+            ...article,
+            image: article.image?.startsWith('blob:') ? '/hero-featured.jpg' : article.image,
+            tags: typeof rawTags === 'string'
+              ? rawTags.split(',').map((t: string) => t.trim()).filter(Boolean)
+              : (article.tags ?? []),
+            // Prisma returns the relation as "comment" (model name); rename to "comments"
+            comments: article.comment ?? article.comments ?? [],
+          };
+        });
 
         const cleanedVideos = dbVideos.map((video: VideoStory) => ({
           ...video,
@@ -119,10 +147,11 @@ export function NewsProvider({ children }: { children: ReactNode }) {
 
   const addArticle = async (article: Omit<Article, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
+      const payload = { ...article, tags: Array.isArray(article.tags) ? article.tags.join(',') : (article.tags ?? '') };
       const response = await fetch(`${API_BASE_URL}/articles`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(article)
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        body: JSON.stringify(payload)
       });
       if (response.ok) {
         const newArticle = await response.json();
@@ -138,7 +167,7 @@ export function NewsProvider({ children }: { children: ReactNode }) {
     try {
       const response = await fetch(`${API_BASE_URL}/articles/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
         body: JSON.stringify(updates)
       });
       if (response.ok) {
@@ -157,7 +186,8 @@ export function NewsProvider({ children }: { children: ReactNode }) {
   const deleteArticle = async (id: string) => {
     try {
       const response = await fetch(`${API_BASE_URL}/articles/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { ...getAuthHeader() }
       });
       if (response.ok) {
         setArticles(prev => prev.filter(article => article.id !== id));
@@ -349,27 +379,115 @@ export function NewsProvider({ children }: { children: ReactNode }) {
     setLibraryImages(prev => prev.filter(img => img !== image));
   };
 
-  const login = async (password: string) => {
-    const inputHash = await hashPassword(password);
+  const loadMore = async () => {
+    try {
+      const nextPage = currentPage + 1;
+      const data = await fetchArticlesPaginated(nextPage, PAGE_SIZE);
+      const cleaned = data.articles.map((article: Article) => ({
+        ...article,
+        image: article.image?.startsWith('blob:') ? '/hero-featured.jpg' : article.image
+      }));
+      setArticles(prev => {
+        const existingIds = new Set(prev.map(a => a.id));
+        return [...prev, ...cleaned.filter((a: Article) => !existingIds.has(a.id))];
+      });
+      setCurrentPage(nextPage);
+      setHasMore(nextPage < data.totalPages);
+    } catch (err) {
+      console.error('Failed to load more articles:', err);
+    }
+  };
 
-    // Initialize default password hash if it doesn't exist
+  const login = async (username: string, password: string) => {
+    try {
+      // Try JWT backend first
+      const res = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      if (res.ok) {
+        const { token, role } = await res.json();
+        sessionStorage.setItem('fmn_admin_token', token);
+        sessionStorage.setItem('fmn_admin_role', role ?? 'admin');
+        sessionStorage.setItem('fmn_admin_username', username);
+        setIsAdmin(true);
+        setIsSuperAdmin(role === 'superadmin');
+        setCurrentUsername(username);
+        return { success: true, role: role ?? 'admin' };
+      }
+    } catch {
+      // Fallback: local SHA-256 check if backend unreachable
+    }
+
+    // Fallback to old SHA-256 local method
+    const inputHash = await hashPassword(password);
     let storedHash = localStorage.getItem('fmn_admin_hash');
     if (!storedHash) {
       storedHash = await hashPassword('admin');
       localStorage.setItem('fmn_admin_hash', storedHash);
     }
-
     if (inputHash === storedHash) {
       setIsAdmin(true);
-      sessionStorage.setItem('fmn_admin_auth', 'true');
-      return true;
+      sessionStorage.setItem('fmn_admin_token', 'local-fallback');
+      return { success: true, role: 'admin' };
     }
-    return false;
+    return { success: false, role: null };
   };
 
   const logout = () => {
     setIsAdmin(false);
-    sessionStorage.removeItem('fmn_admin_auth');
+    setIsSuperAdmin(false);
+    setAdminAccounts([]);
+    setCurrentUsername('');
+    sessionStorage.removeItem('fmn_admin_token');
+    sessionStorage.removeItem('fmn_admin_role');
+    sessionStorage.removeItem('fmn_admin_username');
+  };
+
+  const changePassword = async (currentPassword: string, newPassword: string) => {
+    const res = await fetch(`${API_BASE_URL}/admin/profile/password`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Failed to change password');
+    }
+  };
+
+  const fetchAdminAccounts = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/accounts`, { headers: getAuthHeader() });
+      if (res.ok) setAdminAccounts(await res.json());
+    } catch { /* silent */ }
+  };
+
+  const createAdminAccount = async (username: string, password: string, role: string) => {
+    const res = await fetch(`${API_BASE_URL}/admin/accounts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+      body: JSON.stringify({ username, password, role })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Failed to create account');
+    }
+    const account = await res.json();
+    setAdminAccounts(prev => [...prev, account]);
+  };
+
+  const deleteAdminAccount = async (id: string) => {
+    const res = await fetch(`${API_BASE_URL}/admin/accounts/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeader()
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Failed to delete account');
+    }
+    setAdminAccounts(prev => prev.filter(a => a.id !== id));
   };
 
   return (
@@ -401,7 +519,14 @@ export function NewsProvider({ children }: { children: ReactNode }) {
         addComment,
         deleteComment,
         isAdmin,
+        isSuperAdmin,
+        currentUsername,
+        changePassword,
         setIsAdmin,
+        adminAccounts,
+        fetchAdminAccounts,
+        createAdminAccount,
+        deleteAdminAccount,
         customImages,
         libraryImages,
         addCustomImage,
@@ -409,7 +534,9 @@ export function NewsProvider({ children }: { children: ReactNode }) {
         login,
         logout,
         loading,
-        error
+        error,
+        loadMore,
+        hasMore
       }}
     >
       {children}

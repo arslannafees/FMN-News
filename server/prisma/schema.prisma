@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "fullTextIndex"]
 }
 
 datasource db {
@@ -11,6 +12,7 @@ model admin {
   id           String @id
   username     String @unique(map: "Admin_username_key") @db.VarChar(50)
   passwordHash String @db.VarChar(255)
+  role         String @default("admin") @db.VarChar(20)
 }
 
 model article {
@@ -25,9 +27,30 @@ model article {
   readTime   String?   @db.VarChar(50)
   featured   Boolean   @default(false)
   isBreaking Boolean   @default(false)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime
-  comment    comment[]
+  views      Int       @default(0)
+  tags         String?   @db.VarChar(500)
+  publishAt    DateTime?
+  status       String    @default("published") @db.VarChar(20)
+  articleType  String?   @default("News") @db.VarChar(50)
+  dateline     String?   @db.VarChar(100)
+  imageCaption String?   @db.Text
+  imageCredit  String?   @db.VarChar(200)
+  correction   String?   @db.Text
+  editedBy     String?   @db.VarChar(100)
+  series       String?   @db.VarChar(200)
+  seriesPart        Int?
+  seriesTotal       Int?
+  factCheckVerdict  String?   @db.VarChar(20)
+  lastVerified      DateTime?
+  aboutArticle      String?   @db.Text
+  sources           String?   @db.Text
+  createdAt         DateTime  @default(now())
+  updatedAt    DateTime
+  comment      comment[]
+  authorRel    author?   @relation(fields: [authorId], references: [id])
+  authorId     String?
+
+  @@fulltext([title, content, excerpt])
 }
 
 model breakingnews {
@@ -36,14 +59,40 @@ model breakingnews {
 }
 
 model comment {
-  id        String   @id
-  author    String   @db.VarChar(100)
-  content   String   @db.Text
-  createdAt DateTime @default(now())
+  id        String    @id
+  author    String    @db.VarChar(100)
+  content   String    @db.Text
+  upvotes   Int       @default(0)
+  createdAt DateTime  @default(now())
   articleId String
-  article   article  @relation(fields: [articleId], references: [id], onDelete: Cascade, map: "Comment_articleId_fkey")
+  parentId  String?
+  article   article   @relation(fields: [articleId], references: [id], onDelete: Cascade, map: "Comment_articleId_fkey")
+  parent    comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replies   comment[] @relation("CommentReplies")
 
   @@index([articleId], map: "Comment_articleId_fkey")
+  @@index([parentId])
+}
+
+model liveblog {
+  id        String           @id
+  articleId String           @unique
+  title     String           @db.VarChar(255)
+  isLive    Boolean          @default(true)
+  createdAt DateTime         @default(now())
+  updates   liveblogupdate[]
+}
+
+model liveblogupdate {
+  id         String   @id
+  liveblogId String
+  content    String   @db.Text
+  label      String?  @db.VarChar(100)
+  isPinned   Boolean  @default(false)
+  timestamp  DateTime @default(now())
+  liveblog   liveblog @relation(fields: [liveblogId], references: [id], onDelete: Cascade)
+
+  @@index([liveblogId])
 }
 
 model trendingtopic {
@@ -59,4 +108,33 @@ model videostory {
   duration String  @db.VarChar(20)
   image    String  @db.LongText
   url      String? @db.LongText
+}
+
+model author {
+  id        String    @id
+  name      String    @db.VarChar(100)
+  bio       String?   @db.Text
+  avatar    String?   @db.VarChar(500)
+  title     String?   @db.VarChar(100)
+  twitter   String?   @db.VarChar(200)
+  website   String?   @db.VarChar(200)
+  email     String?   @db.VarChar(200)
+  createdAt DateTime  @default(now())
+  articles  article[]
+}
+
+model subscriber {
+  id        String   @id
+  email     String   @unique @db.VarChar(255)
+  confirmed Boolean  @default(false)
+  token     String?  @db.VarChar(255)
+  createdAt DateTime @default(now())
+}
+
+model pushsubscription {
+  id        String   @id
+  endpoint  String   @db.Text
+  p256dh    String   @db.VarChar(500)
+  auth      String   @db.VarChar(255)
+  createdAt DateTime @default(now())
 }

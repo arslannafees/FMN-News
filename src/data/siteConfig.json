@@ -57,7 +57,7 @@
         },
         {
             "platform": "Rss",
-            "url": "#",
+            "url": "/feed.xml",
             "icon": "Rss"
         }
     ],
@@ -112,6 +112,10 @@
             {
                 "name": "Terms",
                 "url": "#"
+            },
+            {
+                "name": "Admin",
+                "url": "/admin/login"
             }
         ]
     }

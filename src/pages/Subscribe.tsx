@@ -14,10 +14,23 @@ export function Subscribe() {
     weeklyRoundup: false,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email) {
+    if (!email) return;
+    setError('');
+    try {
+      const apiBase = import.meta.env.VITE_API_URL || `${window.location.protocol}//${window.location.hostname}:5000/api`;
+      const res = await fetch(`${apiBase}/subscribe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      if (!res.ok) throw new Error('Subscription failed');
       setIsSubscribed(true);
+    } catch {
+      setError('Something went wrong. Please try again.');
     }
   };
 
@@ -31,7 +44,7 @@ export function Subscribe() {
     <div className="py-6 sm:py-8 lg:py-12">
       <div className="max-w-4xl mx-auto px-4">
         {/* Back Button */}
-        <Link to="/" className="inline-flex items-center gap-2 text-gray-500 hover:text-[#e53935] transition-colors mb-6 sm:mb-8">
+        <Link to="/" className="inline-flex items-center gap-2 text-gray-500 dark:text-zinc-400 hover:text-[#e53935] transition-colors mb-6 sm:mb-8">
           <ArrowLeft size={18} />
           <span className="text-sm">Back to Home</span>
         </Link>
@@ -39,13 +52,13 @@ export function Subscribe() {
         {isSubscribed ? (
           // Success State
           <div className="text-center py-8 sm:py-12">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
-              <Check size={32} className="text-green-600" />
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+              <Check size={32} className="text-green-600 dark:text-green-400" />
             </div>
-            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-[#1a1a1a] mb-3 sm:mb-4">
+            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-[#1a1a1a] dark:text-zinc-100 mb-3 sm:mb-4">
               Welcome to FMN News!
             </h1>
-            <p className="text-gray-600 text-sm sm:text-base mb-6 sm:mb-8 max-w-md mx-auto">
+            <p className="text-gray-600 dark:text-zinc-300 text-sm sm:text-base mb-6 sm:mb-8 max-w-md mx-auto">
               Thank you for subscribing. You'll start receiving our newsletters at <strong>{email}</strong> soon.
             </p>
             <Link to="/">
@@ -59,24 +72,24 @@ export function Subscribe() {
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
             {/* Left Side - Benefits */}
             <div>
-              <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-[#1a1a1a] mb-3 sm:mb-4">
+              <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-[#1a1a1a] dark:text-zinc-100 mb-3 sm:mb-4">
                 Subscribe to FMN News
               </h1>
-              <p className="text-gray-600 text-sm sm:text-base mb-6 sm:mb-8">
+              <p className="text-gray-600 dark:text-zinc-300 text-sm sm:text-base mb-6 sm:mb-8">
                 Join over 100,000 subscribers who get the latest news delivered to their inbox.
               </p>
 
               <div className="space-y-4 sm:space-y-6">
                 {benefits.map((benefit, index) => (
                   <div key={index} className="flex gap-3 sm:gap-4">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-50 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-50 dark:bg-red-900/20 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0">
                       <benefit.icon size={18} className="text-[#e53935]" />
                     </div>
                     <div>
-                      <h3 className="font-accent font-semibold text-sm sm:text-base text-[#1a1a1a]">
+                      <h3 className="font-accent font-semibold text-sm sm:text-base text-[#1a1a1a] dark:text-zinc-100">
                         {benefit.title}
                       </h3>
-                      <p className="text-gray-500 text-xs sm:text-sm">{benefit.description}</p>
+                      <p className="text-gray-500 dark:text-zinc-400 text-xs sm:text-sm">{benefit.description}</p>
                     </div>
                   </div>
                 ))}
@@ -84,14 +97,14 @@ export function Subscribe() {
             </div>
 
             {/* Right Side - Form */}
-            <div className="bg-gray-50 rounded-xl sm:rounded-2xl p-5 sm:p-8">
-              <h2 className="font-display text-lg sm:text-xl font-bold text-[#1a1a1a] mb-4 sm:mb-6">
+            <div className="bg-gray-50 dark:bg-zinc-800 rounded-xl sm:rounded-2xl p-5 sm:p-8">
+              <h2 className="font-display text-lg sm:text-xl font-bold text-[#1a1a1a] dark:text-zinc-100 mb-4 sm:mb-6">
                 Create Your Account
               </h2>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-zinc-200 mb-1 sm:mb-2">
                     Full Name
                   </label>
                   <Input
@@ -104,7 +117,7 @@ export function Subscribe() {
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-zinc-200 mb-1 sm:mb-2">
                     Email Address *
                   </label>
                   <div className="relative">
@@ -121,7 +134,7 @@ export function Subscribe() {
                 </div>
 
                 <div className="pt-2">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-zinc-200 mb-2 sm:mb-3">
                     Email Preferences
                   </label>
                   <div className="space-y-2 sm:space-y-3">
@@ -133,13 +146,15 @@ export function Subscribe() {
                           onChange={(e) => setPreferences(prev => ({ ...prev, [key]: e.target.checked }))}
                           className="w-4 h-4 text-[#e53935] rounded focus:ring-[#e53935]"
                         />
-                        <span className="text-xs sm:text-sm text-gray-700 capitalize">
+                        <span className="text-xs sm:text-sm text-gray-700 dark:text-zinc-200 capitalize">
                           {key.replace(/([A-Z])/g, ' $1').trim()}
                         </span>
                       </label>
                     ))}
                   </div>
                 </div>
+
+                {error && <p className="text-red-500 dark:text-red-400 text-xs">{error}</p>}
 
                 <Button
                   type="submit"
@@ -148,7 +163,7 @@ export function Subscribe() {
                   Subscribe Now
                 </Button>
 
-                <p className="text-[10px] sm:text-xs text-gray-500 text-center">
+                <p className="text-[10px] sm:text-xs text-gray-500 dark:text-zinc-400 text-center">
                   By subscribing, you agree to our Privacy Policy and Terms of Service.
                   You can unsubscribe at any time.
                 </p>

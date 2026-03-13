@@ -1,10 +1,46 @@
 import type { Article, TrendingTopic, VideoStory } from '../types/news';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5001/api';
+const getAPIBaseURL = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  // Development: construct URL based on current host
+  const hostname = window.location.hostname;
+  const port = 5000;
+  const protocol = window.location.protocol;
+  return `${protocol}//${hostname}:${port}/api`;
+};
 
-export async function fetchArticles(): Promise<Article[]> {
-    const response = await fetch(`${API_BASE_URL}/articles`);
+const API_BASE_URL = getAPIBaseURL();
+
+export interface PaginatedArticles {
+    articles: Article[];
+    total: number;
+    page: number;
+    totalPages: number;
+}
+
+export async function fetchArticles(page?: number, limit?: number): Promise<Article[]> {
+    const params = new URLSearchParams();
+    if (page) params.set('page', String(page));
+    if (limit) params.set('limit', String(limit));
+    const url = `${API_BASE_URL}/articles${params.toString() ? '?' + params.toString() : ''}`;
+    const response = await fetch(url);
     if (!response.ok) throw new Error('Failed to fetch articles');
+    const data = await response.json();
+    // Support both paginated and flat response
+    return Array.isArray(data) ? data : data.articles;
+}
+
+export async function fetchArticlesPaginated(page: number, limit: number): Promise<PaginatedArticles> {
+    const response = await fetch(`${API_BASE_URL}/articles?page=${page}&limit=${limit}`);
+    if (!response.ok) throw new Error('Failed to fetch articles');
+    return response.json();
+}
+
+export async function searchArticles(q: string): Promise<Article[]> {
+    const response = await fetch(`${API_BASE_URL}/articles/search?q=${encodeURIComponent(q)}`);
+    if (!response.ok) throw new Error('Failed to search articles');
     return response.json();
 }
 
@@ -22,10 +58,16 @@ export interface MarketItem {
     category: 'Forex' | 'Indices' | 'Commodities' | 'Bonds' | 'Crypto';
 }
 
-interface BinanceTicker {
+interface CoinpaprikaTicker {
+    id: string;
+    name: string;
     symbol: string;
-    lastPrice: string;
-    priceChangePercent: string;
+    quotes: {
+        USD: {
+            price: number;
+            percent_change_24h: number;
+        };
+    };
 }
 
 export interface EnhancedMarketData {
@@ -34,80 +76,108 @@ export interface EnhancedMarketData {
     baseCurrency: string;
 }
 
-// Approximate PKR rate relative to USD (since not in Frankfurter)
-const USD_PKR = 278.50;
+// Coinpaprika coin IDs — free, no auth, CORS enabled (public-apis list ✓)
+const COINPAPRIKA_IDS: Record<string, string> = {
+    BTC:  'btc-bitcoin',
+    ETH:  'eth-ethereum',
+    BNB:  'bnb-binance-coin',
+    SOL:  'sol-solana',
+    XRP:  'xrp-xrp',
+    ADA:  'ada-cardano',
+    DOGE: 'doge-dogecoin',
+    AVAX: 'avax-avalanche',
+    DOT:  'dot-polkadot',
+    MATIC:'matic-polygon',
+};
+
+
+// Major forex symbols to display (subset of the ~170 fawazahmed0 supports)
+const FOREX_SYMBOLS = [
+    'USD', 'EUR', 'GBP', 'JPY', 'CHF', 'CAD', 'AUD', 'NZD', 'CNY', 'INR',
+    'PKR', 'SGD', 'HKD', 'NOK', 'SEK', 'DKK', 'MXN', 'BRL', 'ZAR', 'TRY',
+    'AED', 'SAR', 'KRW', 'THB', 'MYR', 'IDR', 'PHP', 'PLN', 'CZK', 'HUF',
+];
 
 export async function fetchMarketData(baseCurrency: string = 'USD'): Promise<MarketItem[]> {
     try {
-        const isPKR = baseCurrency === 'PKR';
-        const fetchBase = isPKR ? 'USD' : baseCurrency; // Frankfurter API doesn't support PKR as base
+        // fawazahmed0 currency-api: base=usd returns { date, usd: { aud: 1.56, pkr: 305, eur: 0.917, ... } }
+        // All values = "how many of that currency per 1 USD"
+        // Step 1: fetch @latest first to get its actual date, then fetch the day before that.
+        // (Fetching @{yesterday} often returns the same file as @latest since the CDN
+        //  updates at EOD — using latestDate-1 guarantees a genuinely different snapshot.)
+        const todayData = await fetch(
+            'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json'
+        ).then(r => r.json());
 
-        // Fetch real Forex data
-        const forexPromise = fetch(`https://api.frankfurter.dev/v1/latest?base=${fetchBase}`).then(res => res.json());
+        const latestDate: string = todayData.date ?? new Date().toISOString().split('T')[0];
+        const prevDateObj = new Date(latestDate);
+        prevDateObj.setDate(prevDateObj.getDate() - 1);
+        const prevDateStr = prevDateObj.toISOString().split('T')[0];
 
-        // Fetch real Crypto data (Binance)
-        const cryptoPromise = fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","ETHUSDT","BNBUSDT","SOLUSDT"]')
-            .then(res => res.json())
-            .catch(() => []);
+        // Fetch yesterday forex + all Coinpaprika tickers in parallel
+        const coinpaprikaPromises = Object.values(COINPAPRIKA_IDS).map(id =>
+            fetch(`https://api.coinpaprika.com/v1/tickers/${id}?quotes=USD`)
+                .then(r => r.json()).catch(() => null)
+        );
 
-        const [forexData, cryptoData] = await Promise.all([forexPromise, cryptoPromise]);
+        const [yesterdayData, ...cryptoResults] = await Promise.all([
+            fetch(`https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@${prevDateStr}/v1/currencies/usd.json`)
+                .then(r => r.json()).catch(() => ({ usd: {} })),
+            ...coinpaprikaPromises,
+        ]);
+
+        const cryptoData = cryptoResults.filter((c): c is CoinpaprikaTicker => c !== null && c.quotes?.USD?.price != null);
+
+        const todayRates = todayData?.usd as Record<string, number>;
+        const yesterdayRates = (yesterdayData?.usd ?? {}) as Record<string, number>;
+
+        if (!todayRates) return [];
+
+        const baseKey = baseCurrency.toLowerCase();
+
+        // basePerUsd = how many BASE per 1 USD
+        // rate(X / BASE) = basePerUsd / xPerUsd  ← correct cross-rate formula
+        // e.g. AUD/PKR = (pkr per usd) / (aud per usd) = 305 / 1.56 = 195.5 ✓
+        const basePerUsd  = baseCurrency === 'USD' ? 1 : (todayRates[baseKey] ?? 1);
+        const basePrevUsd = baseCurrency === 'USD' ? 1 : (yesterdayRates[baseKey] ?? basePerUsd);
 
         const markets: MarketItem[] = [];
 
-        // Process Forex
-        if (forexData.rates) {
-            Object.entries(forexData.rates).forEach(([symbol, value]) => {
-                let finalValue = value as number;
-                if (isPKR) finalValue *= USD_PKR;
+        // Forex
+        FOREX_SYMBOLS.forEach(sym => {
+            if (sym === baseCurrency) return;
+            const symKey = sym.toLowerCase();
+            const xPerUsd  = sym === 'USD' ? 1 : (todayRates[symKey] ?? 0);
+            const xPrevUsd = sym === 'USD' ? 1 : (yesterdayRates[symKey] ?? xPerUsd);
+            if (!xPerUsd) return;
 
-                markets.push({
-                    symbol: `${symbol}/${baseCurrency}`,
-                    name: symbol,
-                    value: finalValue,
-                    change: `${(Math.random() * 0.4 - 0.2).toFixed(2)}%`,
-                    isUp: Math.random() > 0.5,
-                    category: 'Forex'
-                });
+            const todayRate = basePerUsd / xPerUsd;
+            const prevRate  = basePrevUsd / xPrevUsd;
+            const changePct = prevRate !== 0 ? ((todayRate - prevRate) / prevRate) * 100 : 0;
+
+            markets.push({
+                symbol: `${sym}/${baseCurrency}`,
+                name: sym,
+                value: todayRate,
+                change: `${changePct >= 0 ? '+' : ''}${changePct.toFixed(2)}%`,
+                isUp: changePct >= 0,
+                category: 'Forex',
             });
+        });
 
-            if (isPKR) {
-                markets.push({
-                    symbol: 'USD/PKR',
-                    name: 'US Dollar',
-                    value: USD_PKR,
-                    change: '+0.05%',
-                    isUp: true,
-                    category: 'Forex'
-                });
-            }
-        }
-
-        // Add Crypto (Real Binance Data)
-        if (Array.isArray(cryptoData)) {
-            cryptoData.forEach((c: BinanceTicker) => {
-                const symbol = c.symbol.replace('USDT', '');
-                markets.push({
-                    symbol: symbol,
-                    name: symbol === 'BTC' ? 'Bitcoin' : symbol === 'ETH' ? 'Ethereum' : symbol,
-                    value: 0, // We convert below
-                    change: `${parseFloat(c.priceChangePercent) >= 0 ? '+' : ''}${c.priceChangePercent}%`,
-                    isUp: parseFloat(c.priceChangePercent) >= 0,
-                    category: 'Crypto'
-                });
-
-                // Convert Binance price (USD) to base currency
-                const lastIdx = markets.length - 1;
-                const usdVal = parseFloat(c.lastPrice);
-                if (baseCurrency === 'USD') {
-                    markets[lastIdx].value = usdVal;
-                } else if (baseCurrency === 'PKR') {
-                    markets[lastIdx].value = usdVal * USD_PKR;
-                } else {
-                    const rate = forexData.rates[baseCurrency] || 1;
-                    markets[lastIdx].value = usdVal * rate;
-                }
+        // Crypto — Coinpaprika prices are in USD, convert using basePerUsd
+        cryptoData.forEach((coin: CoinpaprikaTicker) => {
+            const usdPrice = coin.quotes.USD.price;
+            const change24h = coin.quotes.USD.percent_change_24h ?? 0;
+            markets.push({
+                symbol: coin.symbol.toUpperCase(),
+                name: coin.name,
+                value: usdPrice * basePerUsd,
+                change: `${change24h >= 0 ? '+' : ''}${change24h.toFixed(2)}%`,
+                isUp: change24h >= 0,
+                category: 'Crypto',
             });
-        }
+        });
 
         return markets;
     } catch (error) {
@@ -143,97 +213,79 @@ export async function fetchEnhancedMarketData(baseCurrency: string = 'USD'): Pro
     };
 }
 
-export interface OHLCData {
+export interface LineData {
     time: string;
-    open: number;
-    high: number;
-    low: number;
-    close: number;
+    value: number;
 }
 
-export async function fetchHistoricalMarketData(symbol: string, baseCurrency: string = 'USD'): Promise<OHLCData[]> {
+export async function fetchHistoricalLineData(symbol: string, baseCurrency: string = 'USD'): Promise<LineData[]> {
     try {
-        // If it's a forex symbol, use Frankfurter API
         if (symbol.includes('/')) {
-            const endDate = new Date();
+            // Forex: fawazahmed0 weekly snapshots — works for ALL pairs including PKR, AED, SAR, USD/PKR
+            const dates: string[] = [];
+            const cursor = new Date();
+            cursor.setMonth(cursor.getMonth() - 6);
+            const end = new Date();
+            while (cursor <= end) {
+                dates.push(cursor.toISOString().split('T')[0]);
+                cursor.setDate(cursor.getDate() + 7); // weekly intervals (~26 points)
+            }
+
+            const targetKey = symbol.split('/')[0].toLowerCase();
+            const baseKey = baseCurrency.toLowerCase();
+
+            // Fetch all weekly snapshots in parallel from CDN (fast static files)
+            const snapshots = await Promise.all(
+                dates.map(date =>
+                    fetch(`https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@${date}/v1/currencies/usd.json`)
+                        .then(r => r.json())
+                        .catch(() => null)
+                )
+            );
+
+            return snapshots
+                .map((data, i) => {
+                    if (!data?.usd) return null;
+                    const rates = data.usd as Record<string, number>;
+                    const basePerUsd = baseKey === 'usd' ? 1 : (rates[baseKey] ?? 0);
+                    const xPerUsd    = targetKey === 'usd' ? 1 : (rates[targetKey] ?? 0);
+                    if (!basePerUsd || !xPerUsd) return null;
+                    return { time: dates[i], value: basePerUsd / xPerUsd };
+                })
+                .filter((d): d is LineData => d !== null);
+        } else {
+            // Crypto: Coinpaprika historical — real daily close prices (CORS enabled)
+            const coinId = COINPAPRIKA_IDS[symbol.toUpperCase()];
+            if (!coinId) return [];
+
+            let multiplier = 1;
+            if (baseCurrency !== 'USD') {
+                try {
+                    const fxData = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json').then(r => r.json());
+                    multiplier = fxData?.usd?.[baseCurrency.toLowerCase()] ?? 1;
+                } catch { /* keep multiplier = 1 */ }
+            }
+
             const startDate = new Date();
             startDate.setMonth(startDate.getMonth() - 6);
             const startStr = startDate.toISOString().split('T')[0];
-            const endStr = endDate.toISOString().split('T')[0];
 
-            const targetCurrency = symbol.split('/')[0];
-            const fetchBase = baseCurrency === 'PKR' ? 'USD' : baseCurrency;
+            // Coinpaprika historical: [{ timestamp, price, ... }]
+            const response = await fetch(
+                `https://api.coinpaprika.com/v1/tickers/${coinId}/historical?start=${startStr}&interval=1d`
+            );
+            if (!response.ok) return [];
+            const rows: { timestamp: string; price: number }[] = await response.json();
 
-            const response = await fetch(`https://api.frankfurter.dev/v1/${startStr}..${endStr}?base=${fetchBase}&symbols=${targetCurrency}`);
-            if (!response.ok) throw new Error('Failed to fetch historical Forex data');
-            const data = await response.json();
-
-            const ohlcData: OHLCData[] = [];
-            let prevClose = 0;
-
-            for (const [date, values] of Object.entries(data.rates)) {
-                const rateRecord = values as Record<string, number>;
-                let close = rateRecord[targetCurrency] || 0;
-                if (close === 0) continue;
-
-                if (baseCurrency === 'PKR') {
-                    close *= USD_PKR;
-                }
-
-                const open = prevClose === 0 ? close * (1 + (Math.random() * 0.005 - 0.0025)) : prevClose;
-                const volatility = close * (Math.random() * 0.008 + 0.002);
-                const high = Math.max(open, close) + (Math.random() * volatility);
-                const low = Math.min(open, close) - (Math.random() * volatility);
-                ohlcData.push({ time: date, open, high, low, close });
-                prevClose = close;
-            }
-            return ohlcData;
-        } else {
-            // Fetch crypto historical data using Binance klines (1day interval for last 6 months ~180 days)
-            const cryptoSymbol = `${symbol}USDT`;
-            const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${cryptoSymbol}&interval=1d&limit=180`);
-
-            if (!response.ok) {
-                // If it fails (maybe not a Binance symbol), return empty
-                console.warn(`Failed to fetch Binance klines for ${cryptoSymbol}`);
-                return [];
-            }
-
-            const klines = await response.json();
-
-            // Convert USD values to base currency if needed
-            let multiplier = 1;
-            if (baseCurrency === 'PKR') {
-                multiplier = USD_PKR;
-            } else if (baseCurrency !== 'USD') {
-                // Fetch latest rate for conversion (approximate for historical)
-                try {
-                    const latestForex = await fetch(`https://api.frankfurter.dev/v1/latest?base=USD&symbols=${baseCurrency}`).then(res => res.json());
-                    multiplier = latestForex.rates[baseCurrency] || 1;
-                } catch {
-                    multiplier = 1;
-                }
-            }
-
-            return klines.map((k: (string | number)[]) => {
-                const usdVal = {
-                    open: typeof k[1] === 'string' ? parseFloat(k[1]) : Number(k[1]),
-                    high: typeof k[2] === 'string' ? parseFloat(k[2]) : Number(k[2]),
-                    low: typeof k[3] === 'string' ? parseFloat(k[3]) : Number(k[3]),
-                    close: typeof k[4] === 'string' ? parseFloat(k[4]) : Number(k[4])
-                };
-
-                return {
-                    time: new Date(k[0] as number).toISOString().split('T')[0],
-                    open: usdVal.open * multiplier,
-                    high: usdVal.high * multiplier,
-                    low: usdVal.low * multiplier,
-                    close: usdVal.close * multiplier
-                };
-            });
+            return rows
+                .filter(r => r.price != null)
+                .map(r => ({
+                    time: r.timestamp.split('T')[0],
+                    value: r.price * multiplier,
+                }));
         }
     } catch (error) {
-        console.error('Error fetching historical market data:', error);
+        console.error('Error fetching historical line data:', error);
         return [];
     }
 }

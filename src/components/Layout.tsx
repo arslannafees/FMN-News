@@ -6,8 +6,11 @@ import {
 } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
+import { Bell } from 'lucide-react';
+import { subscribeToPush, isPushSubscribed } from '@/services/pushService';
 import { useNews } from '@/context/NewsContextCore';
 import { PageTransition } from './PageTransition';
+import { BreakingTicker } from './BreakingTicker';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -28,6 +31,11 @@ export function Layout({ children }: LayoutProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [temp, setTemp] = useState<string>('...');
   const [time, setTime] = useState(new Date());
+  const [showPushBanner, setShowPushBanner] = useState(false);
+  const [showCookieBanner, setShowCookieBanner] = useState(() => !localStorage.getItem('fmn_cookie_consent'));
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  const [currencyRates, setCurrencyRates] = useState<{ symbol: string; value: string; up: boolean; raw: number }[]>([]);
+  const baseRatesRef = useRef<Record<string, number>>({});
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     if (typeof window !== 'undefined') {
       return (localStorage.getItem('theme') as 'light' | 'dark') || 'light';
@@ -35,25 +43,35 @@ export function Layout({ children }: LayoutProps) {
     return 'light';
   });
 
-  const { breakingNews, config, trendingTopics } = useNews();
+  const { breakingNews, config, trendingTopics, logout, isAdmin, articles } = useNews();
   const location = useLocation();
   const navigate = useNavigate();
+  const isAdminPage = location.pathname.startsWith('/admin');
   const progressBarRef = useRef<HTMLDivElement>(null);
+
+  // Auto-logout when user navigates away from admin pages
+  useEffect(() => {
+    if (isAdmin && !location.pathname.startsWith('/admin')) {
+      logout();
+    }
+  }, [location.pathname, isAdmin, logout]);
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 100);
+      setShowBackToTop(window.scrollY > 500);
 
       // Reading progress — update DOM directly to avoid re-renders
       const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = (window.scrollY / totalHeight) * 100;
+      const progress = totalHeight > 0 ? (window.scrollY / totalHeight) * 100 : 0;
       if (progressBarRef.current) {
         progressBarRef.current.style.width = `${progress}%`;
       }
+
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [location.pathname]);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -104,6 +122,63 @@ export function Layout({ children }: LayoutProps) {
     return () => clearInterval(weatherTimer);
   }, [config.site.location]);
 
+  // Currency rates — real data from open.er-api.com (updates hourly), micro-tick every 5s for live feel
+  useEffect(() => {
+    const buildRates = (r: Record<string, number>, prev?: typeof currencyRates) => {
+      const pairs = [
+        { symbol: 'EUR/USD', raw: 1 / r.EUR, decimals: 4 },
+        { symbol: 'GBP/USD', raw: 1 / r.GBP, decimals: 4 },
+        { symbol: 'USD/JPY', raw: r.JPY,      decimals: 2 },
+        { symbol: 'USD/CHF', raw: r.CHF,      decimals: 4 },
+      ];
+      return pairs.map(p => {
+        const prevRaw = prev?.find(x => x.symbol === p.symbol)?.raw ?? p.raw;
+        const up = p.raw >= prevRaw;
+        return { symbol: p.symbol, value: p.raw.toFixed(p.decimals), up, raw: p.raw };
+      });
+    };
+
+    const fetchRates = async () => {
+      try {
+        const res = await fetch('https://open.er-api.com/v6/latest/USD');
+        const data = await res.json();
+        if (data.rates) {
+          baseRatesRef.current = data.rates;
+          setCurrencyRates(prev => buildRates(data.rates, prev));
+        }
+      } catch { /* silent fail */ }
+    };
+
+    // Micro-fluctuation tick — ±0.03% every 5s to simulate live movement
+    const tick = () => {
+      const base = baseRatesRef.current;
+      if (!Object.keys(base).length) return;
+      const jittered: Record<string, number> = {};
+      ['EUR', 'GBP', 'JPY', 'CHF'].forEach(k => {
+        if (base[k]) jittered[k] = base[k] * (1 + (Math.random() - 0.5) * 0.0006);
+      });
+      setCurrencyRates(prev => buildRates(jittered, prev));
+    };
+
+    fetchRates();
+    const fetchTimer = setInterval(fetchRates, 3_600_000); // re-fetch real data every hour
+    const tickTimer = setInterval(tick, 5_000);            // animate every 5s
+    return () => { clearInterval(fetchTimer); clearInterval(tickTimer); };
+  }, []);
+
+  // Check push subscription status after 3 seconds
+  useEffect(() => {
+    const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+    if (!vapidKey || !('serviceWorker' in navigator)) return;
+    const alreadyDismissed = localStorage.getItem('fmn_push_dismissed');
+    if (alreadyDismissed) return;
+    const timer = setTimeout(async () => {
+      const subscribed = await isPushSubscribed();
+      if (!subscribed) setShowPushBanner(true);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
   const currentDate = time.toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
@@ -125,8 +200,76 @@ export function Layout({ children }: LayoutProps) {
         />
       </div>
 
+      {/* Cookie Consent Banner */}
+      {showCookieBanner && (
+        <div className="fixed bottom-0 left-0 right-0 z-[60] bg-[#1a1a1a] text-white px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xl border-t border-white/10">
+          <p className="text-xs text-gray-300 text-center sm:text-left max-w-2xl">
+            We use cookies to improve your experience. By continuing to use this site, you agree to our{' '}
+            <a href="/privacy" className="text-[#EB483B] hover:underline">Privacy Policy</a>.
+          </p>
+          <div className="flex gap-2 shrink-0">
+            <button
+              onClick={() => { localStorage.setItem('fmn_cookie_consent', '1'); setShowCookieBanner(false); }}
+              className="text-xs font-bold bg-[#EB483B] text-white px-4 py-2 rounded-full hover:bg-[#c62828] transition-colors"
+            >
+              Accept
+            </button>
+            <button
+              onClick={() => { localStorage.setItem('fmn_cookie_consent', 'declined'); setShowCookieBanner(false); }}
+              className="text-xs text-gray-400 hover:text-white px-3 py-2 transition-colors"
+            >
+              Decline
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Back to Top */}
+      {showBackToTop && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="fixed bottom-6 right-6 z-50 w-11 h-11 bg-[#EB483B] hover:bg-[#c62828] text-white rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 animate-in slide-in-from-bottom-4"
+          aria-label="Back to top"
+        >
+          <ChevronRight size={18} className="rotate-[-90deg]" />
+        </button>
+      )}
+
+      {/* Push Notification Banner */}
+      {showPushBanner && (
+        <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-80 bg-[#1a1a1a] text-white rounded-2xl p-4 shadow-2xl z-50 flex items-start gap-3 animate-in slide-in-from-bottom-4 duration-300">
+          <div className="w-8 h-8 bg-[#EB483B] rounded-full flex items-center justify-center shrink-0">
+            <Bell size={16} className="text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold mb-0.5">Enable Notifications</p>
+            <p className="text-[10px] text-gray-400">Get breaking news alerts instantly.</p>
+            <div className="flex gap-2 mt-2">
+              <button
+                onClick={async () => {
+                  const ok = await subscribeToPush();
+                  if (ok) { setShowPushBanner(false); localStorage.setItem('fmn_push_dismissed', '1'); }
+                }}
+                className="text-[10px] font-bold bg-[#EB483B] text-white px-3 py-1 rounded-full hover:bg-[#c62828] transition-colors"
+              >
+                Allow
+              </button>
+              <button
+                onClick={() => { setShowPushBanner(false); localStorage.setItem('fmn_push_dismissed', '1'); }}
+                className="text-[10px] text-gray-400 hover:text-white transition-colors"
+              >
+                Not now
+              </button>
+            </div>
+          </div>
+          <button onClick={() => { setShowPushBanner(false); localStorage.setItem('fmn_push_dismissed', '1'); }} className="text-gray-400 hover:text-white shrink-0">
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
       {/* Header */}
-      <header className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled ? 'shadow-md shadow-black/5' : ''}`}>
+      {!isAdminPage && <header className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled ? 'shadow-md shadow-black/5' : ''}`}>
         {/* Main Header */}
         <div className="bg-black dark:bg-zinc-900 text-white transition-colors duration-300 border-b border-white/5">
           <div className="max-w-7xl mx-auto px-4">
@@ -181,7 +324,7 @@ export function Layout({ children }: LayoutProps) {
                     {isSearchOpen ? <X size={20} /> : <Search size={20} />}
                   </button>
                   {isSearchOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-64 sm:w-72 bg-white dark:bg-zinc-900 shadow-xl rounded-lg p-2 animate-in fade-in slide-in-from-top-2 z-50">
+                    <div className="absolute right-0 top-full mt-2 w-[min(16rem,calc(100vw-2rem))] sm:w-72 bg-white dark:bg-zinc-900 shadow-xl rounded-lg p-2 animate-in fade-in slide-in-from-top-2 z-50">
                       <form onSubmit={(e) => {
                         e.preventDefault();
                         if (searchQuery.trim()) {
@@ -226,11 +369,30 @@ export function Layout({ children }: LayoutProps) {
           </div>
         </div>
 
+        {/* Currency Ticker */}
+        {currencyRates.length > 0 && (
+          <div className="bg-gray-50 dark:bg-zinc-900 border-b border-gray-100 dark:border-zinc-800 overflow-x-auto scrollbar-hide transition-colors duration-300">
+            <div className="max-w-7xl mx-auto px-4 flex items-center h-7 gap-6 whitespace-nowrap">
+              <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 shrink-0 border-r pr-4 border-gray-200 dark:border-zinc-700 h-full flex items-center">Markets</span>
+              <div className="flex items-center gap-5">
+                {currencyRates.map(r => (
+                  <span key={r.symbol} className="flex items-center gap-1.5 text-[9px] font-bold tabular-nums transition-colors duration-500">
+                    <span className="text-gray-400 dark:text-zinc-600 uppercase tracking-wider">{r.symbol}</span>
+                    <span className={r.up ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}>{r.value}</span>
+                    <span className={`text-[8px] leading-none ${r.up ? 'text-green-500' : 'text-red-500'}`}>{r.up ? '▲' : '▼'}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Trending Topics Bar (Secondary Nav) */}
         <nav aria-label="Trending topics" className="bg-white dark:bg-zinc-950 border-b border-gray-200 dark:border-zinc-800 overflow-x-auto scrollbar-hide transition-colors duration-300">
           <div className="max-w-7xl mx-auto px-4 flex items-center h-10 gap-6 whitespace-nowrap">
-            <span className="text-[10px] font-black uppercase tracking-widest text-[#EB483B] shrink-0 border-r pr-6 border-gray-200 h-full flex items-center">
-              Trending Topics
+            <span className="text-[10px] font-black uppercase tracking-widest text-[#EB483B] shrink-0 border-r pr-4 border-gray-200 h-full flex items-center">
+              <span className="hidden sm:inline">Trending Topics</span>
+              <span className="sm:hidden">Trending</span>
             </span>
             <div className="flex items-center gap-6 text-[10px] font-bold uppercase tracking-widest text-gray-600 dark:text-zinc-400">
               {config.navigation
@@ -284,27 +446,10 @@ export function Layout({ children }: LayoutProps) {
             </div>
           </nav>
         )}
-      </header>
+      </header>}
 
       {/* Breaking News Ticker */}
-      <div className="bg-gradient-to-r from-[#e53935] to-[#c62828] text-white overflow-hidden">
-        <div className="max-w-7xl mx-auto flex items-center">
-          <div className="bg-[#1a1a1a] px-3 lg:px-4 py-2 lg:py-3 font-accent font-bold text-xs lg:text-sm flex items-center gap-2 shrink-0">
-            <span className="w-2 h-2 bg-white rounded-full pulse-dot"></span>
-            BREAKING
-          </div>
-          <div className="flex-1 overflow-hidden py-2 lg:py-3">
-            <div className="ticker-animation whitespace-nowrap flex w-max">
-              {[...breakingNews, ...breakingNews].map((news, i) => (
-                <div key={i} className="font-accent text-xs lg:text-sm flex items-center gap-2 shrink-0 pr-8 lg:pr-12">
-                  <span>{news}</span>
-                  <span className="text-white/50">|</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
+      {!isAdminPage && <BreakingTicker news={breakingNews} />}
 
       {/* Main Content */}
       <main>
@@ -314,7 +459,7 @@ export function Layout({ children }: LayoutProps) {
       </main>
 
       {/* Footer */}
-      <footer className="bg-[#1a1a1a] dark:bg-black text-white py-10 lg:py-12 px-4 transition-colors duration-300">
+      {!isAdminPage && <footer className="bg-[#1a1a1a] dark:bg-black text-white py-10 lg:py-12 px-4 transition-colors duration-300">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 mb-8">
             {/* Logo & Description */}
@@ -385,8 +530,16 @@ export function Layout({ children }: LayoutProps) {
           {/* Bottom Bar */}
           <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-gray-500 text-sm text-center sm:text-left">
-              {config.site.copyright}
+              © {new Date().getFullYear()} FMN News. All rights reserved.
             </p>
+            <Link
+              to="/rss"
+              className="flex items-center gap-1.5 text-gray-500 text-xs hover:text-[#EB483B] transition-colors"
+              aria-label="RSS Feeds"
+            >
+              <Rss size={13} />
+              RSS Feeds
+            </Link>
             <button
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
               className="w-10 h-10 bg-[#EB483B] rounded-sm flex items-center justify-center hover:bg-[#c62828] transition-colors"
@@ -396,7 +549,7 @@ export function Layout({ children }: LayoutProps) {
             </button>
           </div>
         </div>
-      </footer>
+      </footer>}
     </div>
   );
 }
