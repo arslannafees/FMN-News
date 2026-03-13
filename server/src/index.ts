@@ -82,7 +82,7 @@ cron.schedule('* * * * *', async () => {
     } catch { /* silent */ }
 });
 
-app.use(cors());
+app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'] }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
@@ -627,7 +627,7 @@ app.get('/feed/:category.xml', async (req, res) => {
     try {
         const category = req.params.category;
         const articles = await prisma.article.findMany({
-            where: { status: 'published', category: { equals: category } },
+            where: { status: 'published', category: { equals: category, mode: 'insensitive' } },
             orderBy: { createdAt: 'desc' },
             take: 20,
         });
