@@ -1,67 +1,64 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearch", "fullTextIndex"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
 model admin {
   id           String @id
-  username     String @unique(map: "Admin_username_key") @db.VarChar(50)
-  passwordHash String @db.VarChar(255)
-  role         String @default("admin") @db.VarChar(20)
+  username     String @unique(map: "Admin_username_key")
+  passwordHash String
+  role         String @default("admin")
 }
 
 model article {
-  id         String    @id
-  title      String    @db.VarChar(255)
-  excerpt    String    @db.Text
-  content    String    @db.LongText
-  category   String    @db.VarChar(50)
-  author     String    @db.VarChar(100)
-  image      String    @db.LongText
-  time       String    @db.VarChar(50)
-  readTime   String?   @db.VarChar(50)
-  featured   Boolean   @default(false)
-  isBreaking Boolean   @default(false)
-  views      Int       @default(0)
-  tags         String?   @db.VarChar(500)
-  publishAt    DateTime?
-  status       String    @default("published") @db.VarChar(20)
-  articleType  String?   @default("News") @db.VarChar(50)
-  dateline     String?   @db.VarChar(100)
-  imageCaption String?   @db.Text
-  imageCredit  String?   @db.VarChar(200)
-  correction   String?   @db.Text
-  editedBy     String?   @db.VarChar(100)
-  series       String?   @db.VarChar(200)
+  id                String    @id
+  title             String
+  excerpt           String
+  content           String
+  category          String
+  author            String
+  image             String
+  time              String
+  readTime          String?
+  featured          Boolean   @default(false)
+  isBreaking        Boolean   @default(false)
+  views             Int       @default(0)
+  tags              String?
+  publishAt         DateTime?
+  status            String    @default("published")
+  articleType       String?   @default("News")
+  dateline          String?
+  imageCaption      String?
+  imageCredit       String?
+  correction        String?
+  editedBy          String?
+  series            String?
   seriesPart        Int?
   seriesTotal       Int?
-  factCheckVerdict  String?   @db.VarChar(20)
+  factCheckVerdict  String?
   lastVerified      DateTime?
-  aboutArticle      String?   @db.Text
-  sources           String?   @db.Text
+  aboutArticle      String?
+  sources           String?
   createdAt         DateTime  @default(now())
-  updatedAt    DateTime
-  comment      comment[]
-  authorRel    author?   @relation(fields: [authorId], references: [id])
-  authorId     String?
-
-  @@fulltext([title, content, excerpt])
+  updatedAt         DateTime
+  comment           comment[]
+  authorRel         author?   @relation(fields: [authorId], references: [id])
+  authorId          String?
 }
 
 model breakingnews {
   id   Int    @id @default(autoincrement())
-  text String @db.Text
+  text String
 }
 
 model comment {
   id        String    @id
-  author    String    @db.VarChar(100)
-  content   String    @db.Text
+  author    String
+  content   String
   upvotes   Int       @default(0)
   createdAt DateTime  @default(now())
   articleId String
@@ -77,7 +74,7 @@ model comment {
 model liveblog {
   id        String           @id
   articleId String           @unique
-  title     String           @db.VarChar(255)
+  title     String
   isLive    Boolean          @default(true)
   createdAt DateTime         @default(now())
   updates   liveblogupdate[]
@@ -86,8 +83,8 @@ model liveblog {
 model liveblogupdate {
   id         String   @id
   liveblogId String
-  content    String   @db.Text
-  label      String?  @db.VarChar(100)
+  content    String
+  label      String?
   isPinned   Boolean  @default(false)
   timestamp  DateTime @default(now())
   liveblog   liveblog @relation(fields: [liveblogId], references: [id], onDelete: Cascade)
@@ -97,44 +94,44 @@ model liveblogupdate {
 
 model trendingtopic {
   id    String @id
-  tag   String @db.VarChar(100)
-  count String @db.VarChar(20)
-  size  String @db.VarChar(20)
+  tag   String
+  count String
+  size  String
 }
 
 model videostory {
   id       String  @id
-  title    String  @db.VarChar(255)
-  duration String  @db.VarChar(20)
-  image    String  @db.LongText
-  url      String? @db.LongText
+  title    String
+  duration String
+  image    String
+  url      String?
 }
 
 model author {
   id        String    @id
-  name      String    @db.VarChar(100)
-  bio       String?   @db.Text
-  avatar    String?   @db.VarChar(500)
-  title     String?   @db.VarChar(100)
-  twitter   String?   @db.VarChar(200)
-  website   String?   @db.VarChar(200)
-  email     String?   @db.VarChar(200)
+  name      String
+  bio       String?
+  avatar    String?
+  title     String?
+  twitter   String?
+  website   String?
+  email     String?
   createdAt DateTime  @default(now())
   articles  article[]
 }
 
 model subscriber {
   id        String   @id
-  email     String   @unique @db.VarChar(255)
+  email     String   @unique
   confirmed Boolean  @default(false)
-  token     String?  @db.VarChar(255)
+  token     String?
   createdAt DateTime @default(now())
 }
 
 model pushsubscription {
   id        String   @id
-  endpoint  String   @db.Text
-  p256dh    String   @db.VarChar(500)
-  auth      String   @db.VarChar(255)
+  endpoint  String
+  p256dh    String
+  auth      String
   createdAt DateTime @default(now())
 }

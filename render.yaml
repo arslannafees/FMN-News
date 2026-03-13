@@ -6,15 +6,19 @@ services:
     rootDir: server
     buildCommand: npm install && npm run build
     startCommand: npm start
+    disk:
+      name: fmn-db
+      mountPath: /var/data
+      sizeGB: 1
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        sync: false          # Set this in Render dashboard → your MySQL connection string
+        value: file:/var/data/fmn.db
       - key: JWT_SECRET
-        generateValue: true  # Render auto-generates a secure random value
+        generateValue: true
       - key: SITE_URL
-        sync: false          # Set to your frontend Render URL, e.g. https://fmn-news.onrender.com
+        sync: false          # Set to your frontend Render URL e.g. https://fmn-news.onrender.com
       - key: VAPID_PUBLIC_KEY
         sync: false
       - key: VAPID_PRIVATE_KEY
@@ -40,6 +44,6 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_URL
-        sync: false          # Set to your backend Render URL, e.g. https://fmn-api.onrender.com/api
+        sync: false          # Set to your backend Render URL e.g. https://fmn-api.onrender.com/api
       - key: VITE_VAPID_PUBLIC_KEY
         sync: false

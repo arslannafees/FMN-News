@@ -627,7 +627,7 @@ app.get('/feed/:category.xml', async (req, res) => {
     try {
         const category = req.params.category;
         const articles = await prisma.article.findMany({
-            where: { status: 'published', category: { equals: category, mode: 'insensitive' } },
+            where: { status: 'published', category: { equals: category } },
             orderBy: { createdAt: 'desc' },
             take: 20,
         });
