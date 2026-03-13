@@ -63,7 +63,7 @@ model comment {
   createdAt DateTime  @default(now())
   articleId String
   parentId  String?
-  article   article   @relation(fields: [articleId], references: [id], onDelete: Cascade, map: "Comment_articleId_fkey")
+  article   article   @relation(fields: [articleId], references: [id], onDelete: Cascade)
   parent    comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   replies   comment[] @relation("CommentReplies")
 

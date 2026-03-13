@@ -41,7 +41,7 @@ async function main() {
 
     console.log('Seeding Videos...');
     for (const video of initialData.videoStories) {
-        await prisma.videoStory.upsert({
+        await prisma.videostory.upsert({
             where: { id: video.id },
             update: {},
             create: {
@@ -56,7 +56,7 @@ async function main() {
 
     console.log('Seeding Trending Topics...');
     for (const topic of initialData.trendingTopics) {
-        await prisma.trendingTopic.upsert({
+        await prisma.trendingtopic.upsert({
             where: { id: topic.id },
             update: {},
             create: {
@@ -70,9 +70,9 @@ async function main() {
 
     console.log('Seeding Breaking News...');
     for (const news of initialData.breakingNews) {
-        const existing = await prisma.breakingNews.findFirst({ where: { text: news } });
+        const existing = await prisma.breakingnews.findFirst({ where: { text: news } });
         if (!existing) {
-            await prisma.breakingNews.create({
+            await prisma.breakingnews.create({
                 data: { text: news },
             });
         }
@@ -84,6 +84,7 @@ async function main() {
         where: { username: 'admin' },
         update: {},
         create: {
+            id: 'admin-default',
             username: 'admin',
             passwordHash: passwordHash,
         },
